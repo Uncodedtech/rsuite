@@ -1,30 +1,49 @@
 <!--start-code-->
 
 ```js
-const instance = (
-  <div>
-    <label>Disabled:</label>
+import { Radio } from 'rsuite';
+
+const App = () => (
+  <>
+    <Label>Disabled</Label>
     <Radio disabled> Radio</Radio>
     <Radio checked disabled>
       Checked Radio
     </Radio>
 
     <hr />
-    <label>Read only:</label>
+    <Label>Read only</Label>
     <Radio readOnly> Radio</Radio>
     <Radio checked readOnly>
       Checked Radio
     </Radio>
 
     <hr />
-    <label>Plaintext:</label>
+    <Label>Plaintext</Label>
     <Radio plaintext> Radio</Radio>
     <Radio checked plaintext>
       Checked Radio
     </Radio>
-  </div>
+  </>
 );
-ReactDOM.render(instance);
+
+function Label({ children }) {
+  return (
+    <label
+      style={{
+        verticalAlign: 'middle',
+        display: 'inline-block',
+        marginRight: 10,
+        width: 70,
+        color: 'var(--rs-text-secondary)'
+      }}
+    >
+      {children}
+    </label>
+  );
+}
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

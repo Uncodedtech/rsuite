@@ -1,15 +1,8 @@
-import React from 'react';
-import InputPicker, { InputPickerProps } from '../InputPicker/InputPicker';
-import type { PickerComponent } from '../Picker/types';
+import TagPicker from './TagPicker';
 
-export type TagPickerProps = InputPickerProps;
+// export types
+export type { TagPickerProps } from './TagPicker';
 
-const TagPicker: PickerComponent<TagPickerProps> = React.forwardRef(
-  (props: TagPickerProps, ref) => {
-    return <InputPicker {...props} ref={ref} multi />;
-  }
-);
-
-TagPicker.displayName = 'TagPicker';
-
+// export components
+export { TagPicker };
 export default TagPicker;

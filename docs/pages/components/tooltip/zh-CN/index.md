@@ -1,13 +1,13 @@
-# Tooltip 文字提示
+# Tooltip 工具提示框
 
 用于辅助的文字提示，可代替 HTML 元素默认的 title 属性。
 
-- `<Tooltip>` 文字提示。
-- `<Whisper>` 监听触发器，包裹被监听对象的外面，触发事件后通知到 `<Tooltip>` 展示出来。
-
 ## 获取组件
 
-<!--{include:(components/tooltip/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
+
+- `<Tooltip>` 文字提示。
+- `<Whisper>` 监听触发器，包裹被监听对象的外面，触发事件后通知到 `<Tooltip>` 展示出来。
 
 ## 演示
 
@@ -49,18 +49,28 @@
 
 <!--{include:`disabled-elements.md`}-->
 
-## Props
+### 隐藏箭头
 
-<!--{include:(_common/types/placement-all.md)}-->
+您可以通过设置 `arrow` 属性为 `false` 隐藏箭头指示器。
+
+<!--{include:`arrow.md`}-->
+
+### 跟随光标
+
+您可以通过设置 `followCursor` 属性为 `true` 来让 `Tooltip` 跟随光标移动。
+
+<!--{include:`follow-cursor.md`}-->
 
 ## Props
 
 ### `<Tooltip>`
 
-| 属性名称    | 类型 `(默认值)`      | 描述              |
-| ----------- | -------------------- | ----------------- |
-| children \* | ReactNode            | 组件的内容        |
-| classPrefix | string `('tooltip')` | 组件 CSS 类的前缀 |
-| visible     | boolean              | 组件默认可见的    |
+| 属性名称    | 类型 `(默认值)`      | 描述               |
+| ----------- | -------------------- | ------------------ |
+| arrow       | boolean `(true)`     | 是否显示箭头指示器 |
+| children \* | ReactNode            | 组件的内容         |
+| classPrefix | string `('tooltip')` | 组件 CSS 类的前缀  |
+| visible     | boolean              | 组件默认可见的     |
 
 <!--{include:(components/whisper/zh-CN/props.md)}-->
+<!--{include:(_common/types/placement-all.md)}-->

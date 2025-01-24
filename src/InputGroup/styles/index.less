@@ -18,6 +18,10 @@
   color: var(--rs-text-primary);
   border: 1px solid var(--rs-border-primary);
 
+  .high-contrast-mode({
+    transition: none;
+  });
+
   &:not(.rs-input-group-disabled):hover,
   &:not(.rs-input-group-disabled).rs-input-group-focus,
   &:focus-within {
@@ -26,7 +30,12 @@
 
   &:not(.rs-input-group-disabled).rs-input-group-focus,
   &:focus-within {
-    box-shadow: var(--rs-state-focus-shadow);
+    .focus-ring();
+  }
+
+  & & {
+    outline: none !important;
+    border-color: transparent !important;
   }
 
   .rs-input-number,
@@ -35,7 +44,7 @@
   .rs-picker-date .rs-picker-toggle {
     border: none;
     border-radius: 0;
-    box-shadow: none;
+    outline: none;
   }
 
   // Reset border
@@ -43,7 +52,7 @@
     .rs-input {
       border: none;
       border-radius: 0;
-      box-shadow: none;
+      outline: none;
     }
 
     .rs-input-number:not(:last-child) .rs-input-number {
@@ -93,11 +102,6 @@
     // Ensure that the input is always above the *appended* addon button for
     // proper border colors.
     position: relative;
-    z-index: @zindex-input;
-
-    &:focus {
-      z-index: (@zindex-input+1);
-    }
   }
 
   input.rs-input ~ .rs-input-group-addon,
@@ -115,19 +119,17 @@
 
   &.rs-input-group-inside {
     width: 100%;
-    //border-radius: 0;
+    background-color: var(--rs-input-bg);
 
     .rs-input {
       display: block;
       width: 100%;
       border: none;
-      padding-right: @input-group-padding-for-add-on-base;
+      outline: none;
     }
 
     .rs-input-group-btn,
     .rs-input-group-addon {
-      position: absolute;
-      z-index: @zindex-input-group-icon;
       flex: 0 0 auto;
       width: auto;
     }
@@ -136,11 +138,10 @@
       .rs-btn-subtle();
 
       color: inherit;
-      position: absolute;
       .reset-inside-input-group-btn-size(base);
 
       &:focus {
-        box-shadow: none;
+        outline: none;
       }
 
       // reset border radius
@@ -157,7 +158,11 @@
       top: 0;
       background: none;
       border: none;
-      padding: 11px 13px 8px 13px;
+      padding: 10px 12px;
+
+      &.rs-input-group-btn {
+        padding: 8px 13px;
+      }
     }
 
     .rs-input-group-btn ~ input.rs-input,
@@ -166,7 +171,7 @@
     .rs-input-group-addon ~ .rs-auto-complete > input.rs-input,
     .rs-input-group-addon ~ .rs-form-control-wrapper > input.rs-input,
     .rs-input-group-btn ~ .rs-form-control-wrapper > input.rs-input {
-      padding-left: @input-group-padding-for-add-on-base;
+      padding-left: 0;
       padding-right: 12px;
     }
 
@@ -186,7 +191,7 @@
   }
 }
 
-.rs-input-group-disabled {
+.rs-input-group.rs-input-group-disabled {
   background-color: var(--rs-input-disabled-bg);
   color: var(--rs-text-disabled);
   cursor: not-allowed;
@@ -367,13 +372,6 @@
     + .rs-btn {
       margin-left: -1px;
     }
-
-    // Bring the "active" button to the front
-    &:hover,
-    &:focus,
-    &:active {
-      z-index: 2;
-    }
   }
 
   // Negative margin to only have a 1px border between the two
@@ -388,7 +386,6 @@
   &:last-child {
     > .rs-btn,
     > .rs-btn-group {
-      z-index: 2;
       margin-left: -1px;
     }
   }

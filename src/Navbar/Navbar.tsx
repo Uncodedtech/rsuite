@@ -1,57 +1,70 @@
-import React from 'react';
-import NavbarBody from './NavbarBody';
-import NavbarHeader from './NavbarHeader';
+import React, { useMemo } from 'react';
 import NavbarBrand from './NavbarBrand';
-import { useClassNames } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
-
-export const NavbarContext = React.createContext<boolean>(null);
-
-type AppearanceType = 'default' | 'inverse' | 'subtle';
+import NavbarContent from './NavbarContent';
+import NavbarToggle from './NavbarToggle';
+import NavbarDrawer from './NavbarDrawer';
+import { forwardRef } from '@/internals/utils';
+import { useClassNames, useEventCallback, useUniqueId } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import { NavbarContext } from './NavbarContext';
+import type { WithAsProps } from '@/internals/types';
 
 export interface NavbarProps extends WithAsProps {
-  appearance?: AppearanceType;
-  classPrefix?: string;
-  hasChildContext?: boolean;
+  /**
+   * The appearance style of the Navbar component.
+   */
+  appearance?: 'default' | 'inverse' | 'subtle';
+
+  /**
+   * Callback when the drawer is opened or closed.
+   */
+  onDrawerOpenChange?: (open: boolean) => void;
 }
 
-interface NavbarComponent extends RsRefForwardingComponent<'div', NavbarProps> {
-  /**
-   * @deprecated use Navbar.Brand instead
-   */
-  Header: typeof NavbarHeader;
-  /**
-   * @deprecated use Nav as direct child of Navbar
-   */
-  Body: typeof NavbarBody;
-  Brand: typeof NavbarBrand;
-}
-
-const defaultProps: Partial<NavbarProps> = {
-  as: 'div',
-  hasChildContext: true,
-  classPrefix: 'navbar',
-  appearance: 'default'
+const Subcomponents = {
+  Brand: NavbarBrand,
+  Content: NavbarContent,
+  Toggle: NavbarToggle,
+  Drawer: NavbarDrawer
 };
 
-const Navbar: NavbarComponent = (React.forwardRef(
-  (props: NavbarProps, ref: React.Ref<HTMLElement>) => {
-    const { className, as: Component, hasChildContext, classPrefix, appearance, ...rest } = props;
-    const { withClassPrefix, merge } = useClassNames(classPrefix);
-    const classes = merge(className, withClassPrefix(appearance));
-    return (
-      <NavbarContext.Provider value={hasChildContext}>
-        <Component {...rest} ref={ref} className={classes} />
-      </NavbarContext.Provider>
-    );
-  }
-) as unknown) as NavbarComponent;
+/**
+ * The `Navbar` component is a wrapper that positions navigation elements.
+ * @see https://rsuitejs.com/components/navbar
+ */
+const Navbar = forwardRef<'div', NavbarProps, typeof Subcomponents>((props, ref) => {
+  const { propsWithDefaults } = useCustom('Navbar', props);
+  const {
+    className,
+    as: Component = 'nav',
+    classPrefix = 'navbar',
+    appearance = 'default',
+    onDrawerOpenChange,
+    ...rest
+  } = propsWithDefaults;
 
-Navbar.Header = NavbarHeader;
-Navbar.Body = NavbarBody;
-Navbar.Brand = NavbarBrand;
+  const { withClassPrefix, merge } = useClassNames(classPrefix);
+  const classes = merge(className, withClassPrefix(appearance));
+  const [open, setOpen] = React.useState(false);
+
+  const handleToggle = useEventCallback((nextOpen: boolean) => {
+    setOpen(nextOpen);
+    onDrawerOpenChange?.(nextOpen);
+  });
+
+  const navbarId = useUniqueId('navbar-');
+  const context = useMemo(
+    () => ({ appearance, open, navbarId, onToggle: handleToggle }),
+    [appearance, navbarId, open]
+  );
+
+  return (
+    <NavbarContext.Provider value={context}>
+      <Component {...rest} ref={ref} className={classes} />
+    </NavbarContext.Provider>
+  );
+}, Subcomponents);
 
 Navbar.displayName = 'Navbar';
-Navbar.defaultProps = defaultProps;
 
 export default Navbar;

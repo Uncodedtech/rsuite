@@ -1,51 +1,34 @@
 <!--start-code-->
 
 ```js
-/**
- * import data from
- * https://github.com/rsuite/rsuite/blob/master/docs/public/data/users-role.json
- */
+import { TagPicker, VStack, HStack } from 'rsuite';
 
-const instance = (
-  <div>
-    <label>Disabled: </label>
-    <TagPicker
-      disabled
-      data={data}
-      defaultValue={['Julius']}
-      style={{ width: 300 }}
-      menuStyle={{ width: 300 }}
-    />
-
-    <label style={{ marginLeft: 10 }}>Disabled option: </label>
-    <TagPicker
-      data={data}
-      defaultValue={['Julius']}
-      disabledItemValues={['Eugenia', 'Travon', 'Vincenza']}
-      style={{ width: 300 }}
-      menuStyle={{ width: 300 }}
-    />
-    <hr />
-    <label>Read only: </label>
-    <TagPicker
-      readOnly
-      data={data}
-      defaultValue={['Julius']}
-      style={{ width: 300 }}
-      menuStyle={{ width: 300 }}
-    />
-    <hr />
-    <label>Plaintext: </label>
-    <TagPicker
-      plaintext
-      data={data}
-      defaultValue={['Julius']}
-      style={{ width: 300 }}
-      menuStyle={{ width: 300 }}
-    />
-  </div>
+const data = ['Eugenia', 'Bryan', 'Linda', 'Nancy', 'Lloyd', 'Alice', 'Julia', 'Albert'].map(
+  item => ({ label: item, value: item })
 );
-ReactDOM.render(instance);
+
+const App = () => (
+  <VStack spacing={16}>
+    <Select label="Disabled" disabled data={data} defaultValue={['Eugenia']} />
+    <Select
+      label="Disabled option"
+      data={data}
+      defaultValue={['Eugenia']}
+      disabledItemValues={['Bryan', 'Linda', 'Nancy']}
+    />
+    <Select label="Read only" readOnly data={data} defaultValue={['Eugenia']} />
+    <Select label="Plaintext" plaintext data={data} defaultValue={['Eugenia']} />
+  </VStack>
+);
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+const Select = ({ label, children, ...rest }) => (
+  <HStack>
+    <label style={{ width: 120 }}>{label}:</label>
+    <TagPicker {...rest} style={{ width: 180 }} />
+  </HStack>
+);
 ```
 
 <!--end-code-->

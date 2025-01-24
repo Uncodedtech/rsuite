@@ -1,13 +1,9 @@
 <!--start-code-->
 
 ```js
-const styles = {
-  radioGroupLabel: {
-    padding: '8px 12px',
-    display: 'inline-block',
-    verticalAlign: 'middle'
-  }
-};
+import { Modal, ButtonToolbar, Button, RadioGroup, Radio, Placeholder } from 'rsuite';
+
+const RadioLabel = ({ children }) => <label style={{ padding: 7 }}>{children}</label>;
 
 const App = () => {
   const [open, setOpen] = React.useState(false);
@@ -16,7 +12,7 @@ const App = () => {
   const handleClose = () => setOpen(false);
 
   return (
-    <div className="modal-container">
+    <>
       <RadioGroup
         name="radioList"
         appearance="picker"
@@ -24,7 +20,7 @@ const App = () => {
         value={backdrop}
         onChange={value => setBackdrop(value)}
       >
-        <span style={styles.radioGroupLabel}>Backdrop: </span>
+        <RadioLabel>Backdrop: </RadioLabel>
         <Radio value="static">static</Radio>
         <Radio value={true}>true</Radio>
         <Radio value={false}>false</Radio>
@@ -40,7 +36,7 @@ const App = () => {
         </Modal.Header>
 
         <Modal.Body>
-          <Paragraph />
+          <Placeholder.Paragraph />
         </Modal.Body>
         <Modal.Footer>
           <Button onClick={handleClose} appearance="primary">
@@ -51,10 +47,11 @@ const App = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-    </div>
+    </>
   );
 };
-ReactDOM.render(<App />);
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

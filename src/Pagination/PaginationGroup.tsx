@@ -1,136 +1,129 @@
-import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
+import React from 'react';
 import classNames from 'classnames';
 import Pagination, { PaginationProps } from './Pagination';
-import SelectPicker from '../SelectPicker';
 import Divider from '../Divider';
 import Input from '../Input';
-import { tplTransform, useClassNames, useCustom, useControlled } from '../utils';
-import { RsRefForwardingComponent } from '../@types/common';
-import { PaginationLocale } from '../locales';
+import LimitPicker from './LimitPicker';
+import { useClassNames, useControlled, useEventCallback } from '@/internals/hooks';
+import { forwardRef, tplTransform } from '@/internals/utils';
+import { useCustom } from '../CustomProvider';
 
-type LayoutType = 'total' | '-' | 'pager' | '|' | 'limit' | 'skip';
+/**
+ * The layout of the paging component.
+ */
+type LayoutType = 'total' | 'pager' | 'limit' | 'skip' | '-' | '|';
 
 export interface PaginationGroupProps extends PaginationProps {
-  /** Customize the layout of a paging component */
+  /**
+   * Customize the layout of a paging component.
+   * - `total` Component used to display the total.
+   * - `pager` Component used to display the page number.
+   * - `limit` Component used to display the number of rows per page.
+   * - `skip` Component used to jump to a page.
+   * - `-` Placeholder, take up the remaining space.
+   * - `|` Divider
+   *
+   * @default ['pager']
+   */
   layout?: LayoutType[];
 
-  /** Customizes the options of the rows per page select field. */
+  /**
+   * Customizes the options of the rows per page select field.
+   */
   limitOptions?: number[];
 
-  /** Customize the layout of a paging component */
+  /**
+   * Customize the layout of a paging component.
+   */
   limit?: number;
 
-  /** Total number of data entries */
+  /**
+   * Total number of data entries.
+   */
   total: number;
 
-  /** Callback fired when the page is changed */
+  /**
+   * Callback fired when the page is changed.
+   */
   onChangePage?: (page: number) => void;
 
-  /** Callback fired when the number of rows per page is changed */
+  /**
+   * Callback fired when the number of rows per page is changed.
+   */
   onChangeLimit?: (limit: number) => void;
 }
 
-const defaultProps: Partial<PaginationGroupProps> = {
-  as: 'div',
-  classPrefix: 'pagination-group',
-  layout: ['pager'],
-  limitOptions: [30, 50, 100]
-};
+const defaultLayout = ['pager'];
+const defaultLimitOptions = [30, 50, 100];
 
-const LimitPicker = (props: Partial<PaginationGroupProps> & { prefix: any }) => {
-  const { disabled, limitOptions, locale, limit, onChangeLimit, size, prefix } = props;
-  const disabledPicker = typeof disabled === 'function' ? disabled('picker') : disabled;
-  const formatlimitOptions = limitOptions.map(item => {
-    return {
-      value: item,
-      label: tplTransform(locale.limit, item)
-    };
+/**
+ * Pagination component for displaying page numbers.
+ *
+ * @see https://rsuitejs.com/components/pagination
+ */
+const PaginationGroup = forwardRef<'div', PaginationGroupProps>((props, ref) => {
+  const {
+    as: Component = 'div',
+    activePage: activePageProp,
+    classPrefix = 'pagination-group',
+    className,
+    disabled,
+    size,
+    style,
+    total,
+    prev,
+    next,
+    first,
+    last,
+    limitOptions = defaultLimitOptions,
+    limit: limitProp,
+    locale: localeProp,
+    layout = defaultLayout,
+    maxButtons,
+    onChangePage,
+    onChangeLimit,
+    ...rest
+  } = props;
+
+  const { merge, prefix, withClassPrefix } = useClassNames(classPrefix);
+  const [limit, setLimit] = useControlled(limitProp, 30);
+  const [activePage, setActivePage] = useControlled(activePageProp, 1);
+
+  const pages = Math.floor(total / limit) + (total % limit ? 1 : 0);
+  const classes = merge(className, withClassPrefix(size));
+
+  const { getLocale } = useCustom();
+  const locale = getLocale('Pagination', localeProp);
+
+  const handleInputBlur = useEventCallback(event => {
+    const value = parseInt(event.target.value);
+    if (value > 0 && value <= pages) {
+      onChangePage?.(value);
+      setActivePage(value);
+    }
+    event.target.value = '';
+  });
+
+  const handleInputPressEnter = useEventCallback(event => {
+    event.target?.blur();
+  });
+
+  const handleChangeLimit = useEventCallback(value => {
+    setLimit(value);
+    onChangeLimit?.(value);
   });
 
   return (
-    <div className={prefix('limit')}>
-      <SelectPicker
-        size={size}
-        cleanable={false}
-        searchable={false}
-        placement="topStart"
-        data={formatlimitOptions}
-        value={limit}
-        onChange={onChangeLimit}
-        menuStyle={{ minWidth: 'auto' }}
-        disabled={disabledPicker}
-      />
-    </div>
-  );
-};
+    <Component ref={ref} className={classes} style={style}>
+      {layout.map((key, index) => {
+        const onlyKey = `${key}${index}`;
 
-const PaginationGroup: RsRefForwardingComponent<'div', PaginationGroupProps> = React.forwardRef(
-  (props: PaginationGroupProps, ref) => {
-    const {
-      as: Component,
-      classPrefix,
-      size,
-      total,
-      prev,
-      next,
-      first,
-      last,
-      maxButtons,
-      className,
-      limitOptions,
-      limit: limitProp,
-      activePage: activePageProp,
-      disabled,
-      style,
-      locale: localeProp,
-      layout,
-      onChangePage,
-      onChangeLimit,
-      ...rest
-    } = props;
-
-    const { merge, prefix, withClassPrefix } = useClassNames(classPrefix);
-    const [limit, setLimit] = useControlled(limitProp, 30);
-    const [activePage, setActivePage] = useControlled(activePageProp, 1);
-    const { locale } = useCustom<PaginationLocale>('Pagination', localeProp);
-    const pages = Math.floor(total / limit) + (total % limit ? 1 : 0);
-    const classes = merge(className, withClassPrefix(size));
-
-    const handleInputBlur = useCallback(
-      event => {
-        const value = parseInt(event.target.value);
-        if (value > 0 && value <= pages) {
-          onChangePage?.(value);
-          setActivePage(value);
-        }
-        event.target.value = '';
-      },
-      [onChangePage, pages, setActivePage]
-    );
-
-    const handleInputPressEnter = useCallback(event => {
-      event.target?.blur();
-    }, []);
-
-    const handleChangeLimit = useCallback(
-      value => {
-        setLimit(value);
-        onChangeLimit?.(value);
-      },
-      [onChangeLimit, setLimit]
-    );
-
-    return (
-      <Component ref={ref} className={classes} style={style}>
-        {layout.map((key, index) => {
-          const onlyKey = `${key}${index}`;
-
-          if (key === '-') {
+        switch (key) {
+          case '-':
             return <div className={prefix('grow')} key={onlyKey} />;
-          } else if (key === '|') {
+          case '|':
             return <Divider vertical key={onlyKey} />;
-          } else if (key === 'pager') {
+          case 'pager':
             return (
               <Pagination
                 key={onlyKey}
@@ -142,31 +135,35 @@ const PaginationGroup: RsRefForwardingComponent<'div', PaginationGroupProps> = R
                 maxButtons={maxButtons}
                 pages={pages}
                 disabled={disabled}
-                onSelect={onChangePage}
+                onSelect={onChangePage as any} // fixme don't use any
                 activePage={activePage}
                 {...rest}
               />
             );
-          } else if (key === 'total') {
+          case 'total':
             return (
               <div key={onlyKey} className={prefix('total')}>
-                {tplTransform(locale.total, total)}
+                {locale.total && tplTransform(locale.total, total)}
               </div>
             );
-          } else if (key === 'skip') {
+          case 'skip':
             return (
               <div key={onlyKey} className={classNames(prefix('skip'))}>
-                {tplTransform(
-                  locale.skip,
-                  <Input
-                    size={size}
-                    onBlur={handleInputBlur}
-                    onPressEnter={handleInputPressEnter}
-                  />
-                )}
+                {locale.skip &&
+                  tplTransform(
+                    locale.skip,
+                    <Input
+                      size={size}
+                      disabled={
+                        typeof disabled === 'function' ? disabled('skip') : Boolean(disabled)
+                      }
+                      onBlur={handleInputBlur}
+                      onPressEnter={handleInputPressEnter}
+                    />
+                  )}
               </div>
             );
-          } else if (key === 'limit') {
+          case 'limit':
             return (
               <LimitPicker
                 key={onlyKey}
@@ -179,25 +176,14 @@ const PaginationGroup: RsRefForwardingComponent<'div', PaginationGroupProps> = R
                 prefix={prefix}
               />
             );
-          }
-          return key;
-        })}
-      </Component>
-    );
-  }
-);
+          default:
+            return key;
+        }
+      })}
+    </Component>
+  );
+});
 
 PaginationGroup.displayName = 'PaginationGroup';
-PaginationGroup.defaultProps = defaultProps;
-PaginationGroup.propTypes = {
-  ...Pagination.propTypes,
-  locale: PropTypes.any,
-  layout: PropTypes.array,
-  limitOptions: PropTypes.array,
-  limit: PropTypes.number,
-  total: PropTypes.number,
-  onChangePage: PropTypes.func,
-  onChangeLimit: PropTypes.func
-};
 
 export default PaginationGroup;

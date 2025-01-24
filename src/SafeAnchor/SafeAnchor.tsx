@@ -1,8 +1,9 @@
 import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import { useCustom } from '../CustomProvider';
+import { forwardRef } from '@/internals/utils';
+import type { WithAsProps } from '@/internals/types';
 
-export interface SafeAnchorProps extends WithAsProps, React.HTMLAttributes<HTMLAnchorElement> {
+export interface SafeAnchorProps extends WithAsProps, React.HTMLAttributes<HTMLElement> {
   /** Link specified url */
   href?: string;
 
@@ -10,38 +11,44 @@ export interface SafeAnchorProps extends WithAsProps, React.HTMLAttributes<HTMLA
   disabled?: boolean;
 }
 
-const SafeAnchor: RsRefForwardingComponent<'a', SafeAnchorProps> = React.forwardRef(
-  (props: SafeAnchorProps, ref) => {
-    const { as: Component = 'a', href, disabled, onClick, ...rest } = props;
-    const handleClick = useCallback(
-      (event: React.MouseEvent<HTMLAnchorElement>) => {
-        if (disabled) {
-          event.preventDefault();
-          event.stopPropagation();
-          return;
-        }
+function isTrivialHref(href: string | undefined) {
+  return !href || href.trim() === '#';
+}
 
-        onClick?.(event);
-      },
-      [onClick, disabled]
-    );
+/**
+ * A SafeAnchor is a wrapper around the `<a>` HTML element.
+ * @private
+ */
+const SafeAnchor = forwardRef<'a', SafeAnchorProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('SafeAnchor', props);
+  const { as: Component = 'a', href, disabled, onClick, ...restProps } = propsWithDefaults;
+  const handleClick = useCallback(
+    event => {
+      if (disabled || isTrivialHref(href)) {
+        event.preventDefault();
+      }
 
-    if (disabled) {
-      rest.tabIndex = -1;
-      rest['aria-disabled'] = true;
-    }
-    if (!href || href !== '#') {
-      rest.role = rest.role || 'button';
-    }
+      if (disabled) {
+        event.stopPropagation();
+        return;
+      }
 
-    return <Component {...rest} href={href} ref={ref} onClick={handleClick} />;
+      onClick?.(event);
+    },
+    [disabled, href, onClick]
+  );
+
+  // There are default role and href attributes on the node to ensure Focus management and keyboard interactions.
+  const trivialProps = isTrivialHref(href) ? { role: 'button', href: '#' } : null;
+
+  if (disabled) {
+    restProps.tabIndex = -1;
+    restProps['aria-disabled'] = true;
   }
-);
+
+  return <Component ref={ref} href={href} {...trivialProps} {...restProps} onClick={handleClick} />;
+});
 
 SafeAnchor.displayName = 'SafeAnchor';
-SafeAnchor.propTypes = {
-  disabled: PropTypes.bool,
-  as: PropTypes.elementType
-};
 
 export default SafeAnchor;

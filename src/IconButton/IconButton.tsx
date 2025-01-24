@@ -1,8 +1,9 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import Button, { ButtonProps } from '../Button';
-import { useClassNames } from '../utils';
-import { IconProps } from '@rsuite/icons/lib/Icon';
+import { forwardRef } from '@/internals/utils';
+import { useClassNames } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import type { IconProps } from '@rsuite/icons/Icon';
 
 export interface IconButtonProps extends ButtonProps {
   /** Set the icon */
@@ -15,13 +16,21 @@ export interface IconButtonProps extends ButtonProps {
   placement?: 'left' | 'right';
 }
 
-const defaultProps: Partial<IconButtonProps> = {
-  classPrefix: 'btn-icon',
-  placement: 'left'
-};
-
-const IconButton = React.forwardRef((props: IconButtonProps, ref) => {
-  const { icon, placement, children, circle, classPrefix, className, ...rest } = props;
+/**
+ * The `IconButton` component is used to specify a button with icon.
+ * @see https://rsuitejs.com/components/button
+ */
+const IconButton = forwardRef<typeof Button, IconButtonProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('IconButton', props);
+  const {
+    icon,
+    placement = 'left',
+    children,
+    circle,
+    classPrefix = 'btn-icon',
+    className,
+    ...rest
+  } = propsWithDefaults;
 
   const { merge, withClassPrefix } = useClassNames(classPrefix);
   const classes = merge(
@@ -41,14 +50,5 @@ const IconButton = React.forwardRef((props: IconButtonProps, ref) => {
 });
 
 IconButton.displayName = 'IconButton';
-IconButton.defaultProps = defaultProps;
-IconButton.propTypes = {
-  className: PropTypes.string,
-  icon: PropTypes.any,
-  classPrefix: PropTypes.string,
-  circle: PropTypes.bool,
-  children: PropTypes.node,
-  placement: PropTypes.oneOf(['left', 'right'])
-};
 
 export default IconButton;

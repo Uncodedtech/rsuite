@@ -1,6 +1,6 @@
-import sv from 'date-fns/locale/sv';
+import { sv } from 'date-fns/locale/sv';
 
-const Calendar = {
+const DateTimeFormats = {
   sunday: 'Sö',
   monday: 'Må',
   tuesday: 'Ti',
@@ -11,6 +11,7 @@ const Calendar = {
   ok: 'OK',
   today: 'I dag',
   yesterday: 'I går',
+  now: 'Nu',
   hours: 'Timmar',
   minutes: 'Minuter',
   seconds: 'Sekunder',
@@ -20,13 +21,31 @@ const Calendar = {
    **/
   formattedMonthPattern: 'MMM yyyy',
   formattedDayPattern: 'dd MMM yyyy',
-  dateLocale: sv
+  shortDateFormat: 'yyyy-MM-dd',
+  shortTimeFormat: 'HH:mm',
+  dateLocale: sv as any
+};
+
+const Combobox = {
+  noResultsText: 'Inga resultat funna',
+  placeholder: 'Välj',
+  searchPlaceholder: 'Sök',
+  checkAll: 'Alla'
+};
+
+const CreatableComboBox = {
+  ...Combobox,
+  newItem: 'Ny inkorg',
+  createOption: 'Skapa meddelande "{0}"'
 };
 
 export default {
+  code: 'sv-SE',
   common: {
     loading: 'Laddar...',
-    emptyMessage: 'Kunde inte hitta data'
+    emptyMessage: 'Kunde inte hitta data',
+    remove: 'Ta bort',
+    clear: 'Rensa'
   },
   Plaintext: {
     unfilled: 'Ofylld',
@@ -43,31 +62,24 @@ export default {
     total: 'totalt: {0}',
     skip: 'Gå til{0}'
   },
-  Calendar,
-  DatePicker: {
-    ...Calendar
-  },
+  DateTimeFormats,
+  Calendar: DateTimeFormats,
+  DatePicker: DateTimeFormats,
   DateRangePicker: {
-    ...Calendar,
+    ...DateTimeFormats,
     last7Days: 'Senaste 7 dagarna'
   },
-  Picker: {
-    noResultsText: 'Inga resultat funna',
-    placeholder: 'Välj',
-    searchPlaceholder: 'Sök',
-    checkAll: 'Alla'
-  },
-  InputPicker: {
-    newItem: 'Ny inkorg',
-    createOption: 'Skapa meddelande "{0}"'
-  },
+  Combobox,
+  InputPicker: CreatableComboBox,
+  TagPicker: CreatableComboBox,
   Uploader: {
     inited: 'Första',
     progress: 'Uppladdning',
     error: 'Fel',
     complete: 'Färdig',
     emptyFile: 'Tom',
-    upload: 'Ladda upp'
+    upload: 'Ladda upp',
+    removeFile: 'Radera filer'
   },
   CloseButton: {
     closeLabel: 'Stänga av'

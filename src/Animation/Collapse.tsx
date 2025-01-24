@@ -1,12 +1,12 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import { getStyle, addStyle } from 'dom-lib';
+import React, { useCallback } from 'react';
+import getStyle from 'dom-lib/getStyle';
+import addStyle from 'dom-lib/addStyle';
 import get from 'lodash/get';
 import capitalize from 'lodash/capitalize';
-import pick from 'lodash/pick';
-import Transition, { transitionPropTypes, TransitionProps } from './Transition';
-import createChainedFunction from '../utils/createChainedFunction';
+import Transition, { TransitionProps } from './Transition';
+import { useClassNames } from '@/internals/hooks';
+import { createChainedFunction } from '@/internals/utils';
+import { useCustom } from '../CustomProvider';
 
 export enum DIMENSION {
   HEIGHT = 'height',
@@ -19,9 +19,6 @@ export interface CollapseProps extends TransitionProps {
 
   /** Function that returns the height or width of the animating DOM node */
   getDimensionValue?: (dimension: DIMENSION, elem: Element) => number;
-
-  /** ARIA role of collapsible element */
-  role?: string;
 }
 
 const triggerBrowserReflow = node => get(node, 'offsetHeight');
@@ -32,7 +29,7 @@ const MARGINS = {
 };
 
 function defaultGetDimensionValue(dimension: DIMENSION, elem: HTMLElement): number {
-  const value = get(elem, `offset${capitalize(dimension)}`);
+  const value = get(elem, `offset${capitalize(dimension)}`) ?? 0;
   const margins = MARGINS[dimension];
 
   return (
@@ -47,103 +44,88 @@ function getScrollDimensionValue(elem: Element, dimension: DIMENSION) {
   return `${value}px`;
 }
 
-class Collapse extends React.Component<CollapseProps> {
-  static propTypes = {
-    ...transitionPropTypes,
-    dimension: PropTypes.any,
-    getDimensionValue: PropTypes.func,
-    role: PropTypes.string
-  };
-  static displayName = 'Collapse';
-  static defaultProps = {
-    timeout: 300,
-    dimension: DIMENSION.HEIGHT,
-    exitedClassName: 'collapse',
-    exitingClassName: 'collapsing',
-    enteredClassName: 'collapse in',
-    enteringClassName: 'collapsing',
-    getDimensionValue: defaultGetDimensionValue
-  };
+/**
+ * A Collapse animation component.
+ * @see https://rsuitejs.com/components/animation/#collapse
+ */
+const Collapse = React.forwardRef((props: CollapseProps, ref: React.Ref<any>) => {
+  const { propsWithDefaults } = useCustom('Collapse', props);
+  const {
+    className,
+    timeout = 300,
+    dimension: dimensionProp = DIMENSION.HEIGHT,
+    exitedClassName,
+    exitingClassName,
+    enteredClassName,
+    enteringClassName,
+    getDimensionValue = defaultGetDimensionValue,
+    onEnter,
+    onEntering,
+    onEntered,
+    onExit,
+    onExiting,
+    ...rest
+  } = propsWithDefaults;
 
-  transitionRef: React.RefObject<any>;
+  const { prefix, merge } = useClassNames('anim');
+  const dimension = typeof dimensionProp === 'function' ? dimensionProp() : dimensionProp;
 
-  constructor(props) {
-    super(props);
-    this.transitionRef = React.createRef();
-  }
+  const handleEnter = useCallback(
+    (elem: HTMLElement) => {
+      addStyle(elem, dimension, 0);
+    },
+    [dimension]
+  );
 
-  // for testing
-  getTransitionInstance() {
-    return this.transitionRef.current;
-  }
+  const handleEntering = useCallback(
+    (elem: HTMLElement) => {
+      addStyle(elem, dimension, getScrollDimensionValue(elem, dimension));
+    },
+    [dimension]
+  );
 
-  handleEnter = (elem: HTMLElement) => {
-    const dimension = this.dimension();
-    addStyle(elem, dimension, 0);
-  };
+  const handleEntered = useCallback(
+    (elem: HTMLElement) => {
+      addStyle(elem, dimension, 'auto');
+    },
+    [dimension]
+  );
 
-  handleEntering = (elem: HTMLElement) => {
-    const dimension = this.dimension();
-    addStyle(elem, dimension, getScrollDimensionValue(elem, dimension));
-  };
+  const handleExit = useCallback(
+    (elem: HTMLElement) => {
+      const value = getDimensionValue ? getDimensionValue(dimension, elem) : 0;
+      addStyle(elem, dimension, `${value}px`);
+    },
+    [dimension, getDimensionValue]
+  );
 
-  handleEntered = (elem: HTMLElement) => {
-    const dimension = this.dimension();
-    addStyle(elem, dimension, 'auto');
-  };
+  const handleExiting = useCallback(
+    (elem: HTMLElement) => {
+      triggerBrowserReflow(elem);
+      addStyle(elem, dimension, 0);
+    },
+    [dimension]
+  );
 
-  handleExit = (elem: HTMLElement) => {
-    const dimension = this.dimension();
-    const { getDimensionValue } = this.props;
-    const value = getDimensionValue ? getDimensionValue(dimension, elem) : 0;
-    addStyle(elem, dimension, `${value}px`);
-  };
+  return (
+    <Transition
+      {...rest}
+      ref={ref}
+      timeout={timeout}
+      className={merge(className, prefix({ 'collapse-horizontal': dimension === 'width' }))}
+      exitedClassName={exitedClassName || prefix('collapse')}
+      exitingClassName={exitingClassName || prefix('collapsing')}
+      enteredClassName={enteredClassName || prefix('collapse', 'in')}
+      enteringClassName={enteringClassName || prefix('collapsing')}
+      onEnter={createChainedFunction(handleEnter, onEnter)}
+      onEntering={createChainedFunction(handleEntering, onEntering)}
+      onEntered={createChainedFunction(handleEntered, onEntered)}
+      onExit={createChainedFunction(handleExit, onExit)}
+      onExiting={createChainedFunction(handleExiting, onExiting)}
+    />
+  );
+});
 
-  handleExiting = (elem: HTMLElement) => {
-    const dimension = this.dimension();
-    triggerBrowserReflow(elem);
-    addStyle(elem, dimension, 0);
-  };
-
-  dimension(): DIMENSION {
-    const { dimension } = this.props;
-
-    return typeof dimension === 'function' ? dimension() : dimension;
-  }
-
-  render() {
-    const {
-      role,
-      className,
-      onExited,
-      onEnter,
-      onEntering,
-      onEntered,
-      onExit,
-      onExiting
-    } = this.props;
-
-    const enterEventHandler = createChainedFunction(this.handleEnter, onEnter);
-    const enteringEventHandler = createChainedFunction(this.handleEntering, onEntering);
-    const enteredEventHandler = createChainedFunction(this.handleEntered, onEntered);
-    const exitEventHandler = createChainedFunction(this.handleExit, onExit);
-    const exitingEventHandler = createChainedFunction(this.handleExiting, onExiting);
-
-    return (
-      <Transition
-        {...pick(this.props, Object.keys(transitionPropTypes))}
-        ref={this.transitionRef}
-        aria-expanded={role ? this.props.in : null}
-        className={classNames(className, { width: this.dimension() === 'width' })}
-        onEnter={enterEventHandler}
-        onEntering={enteringEventHandler}
-        onEntered={enteredEventHandler}
-        onExit={exitEventHandler}
-        onExiting={exitingEventHandler}
-        onExited={onExited}
-      />
-    );
-  }
-}
+Collapse.displayName = 'Collapse';
 
 export default Collapse;

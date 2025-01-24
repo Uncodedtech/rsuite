@@ -1,51 +1,60 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { useClassNames } from '../utils';
-import { TypeAttributes, WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import { forwardRef } from '@/internals/utils';
+import { useClassNames } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import type { Placement, WithAsProps } from '@/internals/types';
 
 export interface TooltipProps extends WithAsProps {
   /** Dispaly placement */
-  placement?: TypeAttributes.Placement;
+  placement?: Placement;
 
-  /** Wheather visible */
+  /** Whether visible */
   visible?: boolean;
 
   /** Primary content */
   children?: React.ReactNode;
+
+  /** Whether show the arrow indicator */
+  arrow?: boolean;
 }
 
-const defaultProps: Partial<TooltipProps> = {
-  as: 'div',
-  classPrefix: 'tooltip'
-};
+/**
+ * The `Tooltip` component is used to describe a element.
+ *
+ * @see https://rsuitejs.com/components/tooltip
+ */
+const Tooltip = forwardRef<'div', TooltipProps>((props: TooltipProps, ref) => {
+  const { propsWithDefaults } = useCustom('Tooltip', props);
+  const {
+    as: Component = 'div',
+    className,
+    classPrefix = 'tooltip',
+    children,
+    style,
+    visible,
+    arrow = true,
+    ...rest
+  } = propsWithDefaults;
 
-const Tooltip: RsRefForwardingComponent<'div', TooltipProps> = React.forwardRef(
-  (props: TooltipProps, ref) => {
-    const { as: Component, className, classPrefix, children, style, visible, ...rest } = props;
+  const { merge, withClassPrefix } = useClassNames(classPrefix);
+  const classes = merge(
+    className,
+    withClassPrefix({
+      arrow
+    })
+  );
+  const styles = {
+    opacity: visible ? 1 : undefined,
+    ...style
+  };
 
-    const { merge, withClassPrefix } = useClassNames(classPrefix);
-    const classes = merge(className, withClassPrefix());
-    const styles = {
-      opacity: visible ? 1 : undefined,
-      ...style
-    };
-
-    return (
-      <Component role="tooltip" {...rest} ref={ref} className={classes} style={styles}>
-        {children}
-      </Component>
-    );
-  }
-);
+  return (
+    <Component role="tooltip" {...rest} ref={ref} className={classes} style={styles}>
+      {children}
+    </Component>
+  );
+});
 
 Tooltip.displayName = 'Tooltip';
-Tooltip.defaultProps = defaultProps;
-Tooltip.propTypes = {
-  visible: PropTypes.bool,
-  classPrefix: PropTypes.string,
-  className: PropTypes.string,
-  style: PropTypes.object,
-  children: PropTypes.node
-};
 
 export default Tooltip;

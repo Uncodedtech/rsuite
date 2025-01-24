@@ -1,9 +1,9 @@
 import React from 'react';
 import classNames from 'classnames';
 import { Content as PageContent, Nav as PageNav } from '@rsuite/document-nav';
-import canUseDOM from 'dom-lib/lib/query/canUseDOM';
+import canUseDOM from 'dom-lib/canUseDOM';
 import { Row, Col } from 'rsuite';
-import AppContext from '../AppContext';
+import { useApp } from '../AppContext';
 import PageToolbar from '../PageToolbar';
 
 interface ContainerProps {
@@ -25,7 +25,7 @@ export default function PageContainer(props: ContainerProps) {
 
   const {
     theme: [themeName, direction]
-  } = React.useContext(AppContext);
+  } = useApp();
 
   const designHash = designHashConfig[themeName];
   const rtl = direction === 'rtl';
@@ -35,7 +35,7 @@ export default function PageContainer(props: ContainerProps) {
   });
 
   return (
-    <Row {...rest} className={classes} key={ssrDone ? 'client' : 'server'}>
+    <Row {...rest} className={classes} data-key={ssrDone ? 'client' : 'server'}>
       <Col md={24} xs={24} sm={24} className="main-container">
         <PageContent>{children}</PageContent>
       </Col>

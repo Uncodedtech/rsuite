@@ -1,14 +1,16 @@
 <!--start-code-->
 
 ```js
-const instance = (
-  <div>
+import { Checkbox } from 'rsuite';
+
+const App = () => (
+  <>
     <Checkbox />
-    <Checkbox> Default</Checkbox>
-    <Checkbox defaultChecked> Checked</Checkbox>
-  </div>
+    <Checkbox>Label</Checkbox>
+    <Checkbox defaultChecked>Checked</Checkbox>
+  </>
 );
-ReactDOM.render(instance);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

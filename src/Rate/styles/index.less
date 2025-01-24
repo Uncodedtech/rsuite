@@ -6,7 +6,7 @@
 .rs-rate {
   position: relative;
   display: inline-flex;
-  color: var(--rs-yellow-500);
+  color: var(--rs-rate-symbol-checked);
   list-style: none;
   vertical-align: middle;
   margin: 0;
@@ -29,8 +29,15 @@
     }
 
     &-after {
-      color: var(--rs-border-primary);
+      color: var(--rs-rate-symbol);
       filter: grayscale(1);
+
+      .high-contrast-mode({
+        > .rs-icon {
+          fill: none;
+          stroke: currentColor;
+        }
+      });
     }
 
     &-before,
@@ -51,6 +58,10 @@
     &-full &-after {
       color: inherit;
       filter: none;
+
+      > .rs-icon {
+        fill: currentColor;
+      }
     }
 
     &-vertical {
@@ -60,7 +71,8 @@
       bottom: 3px;
     }
 
-    .rs-icon {
+    .rs-icon,
+    svg {
       position: absolute;
       height: 1em;
       width: 1em;
@@ -78,12 +90,12 @@
   }
 
   &-disabled {
-    opacity: 0.3;
+    opacity: 0.5;
     outline: none;
   }
 
   &-disabled &-character {
-    cursor: not-allowed;
+    cursor: @cursor-disabled;
   }
 
   &-readonly &-character {
@@ -111,7 +123,10 @@
   // Color variants
   each(@spectrum, .(@color) {
     &-@{color} {
-      color: var(~'--rs-@{color}-500');
+
+      --rs-rate-symbol-checked: var(~'--rs-@{color}-500');
+
+      color: var(--rs-rate-symbol-checked);
     }
   });
 }

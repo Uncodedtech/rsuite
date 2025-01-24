@@ -1,15 +1,24 @@
+import getHeight from 'dom-lib/getHeight';
+import on from 'dom-lib/on';
 import { useState, useRef, useCallback, useEffect } from 'react';
-import bindElementResize, { unbind as unbindElementResize } from 'element-resize-event';
-import helper from '../DOMHelper';
+import { ResizeObserver } from '@juggle/resize-observer';
+import type { SizeType } from '@/internals/types';
+
+export type ModalSize = SizeType | 'full' | number | string;
 
 export const useBodyStyles = (
   ref: React.RefObject<HTMLElement>,
-  options: { overflow: boolean; drawer: boolean; prefix: (...classes: any) => string }
-): [React.CSSProperties, (entering?: boolean) => void, () => void] => {
-  const [bodyStyles, setBodyStyles] = useState({});
-  const { overflow, drawer, prefix } = options;
+  options: {
+    overflow: boolean;
+    size?: ModalSize;
+    prefix: (...classes: any) => string;
+  }
+): [React.CSSProperties | null, (entering?: boolean) => void, () => void] => {
+  const [bodyStyles, setBodyStyles] = useState<React.CSSProperties | null>({});
+  const { overflow, prefix, size } = options;
   const windowResizeListener = useRef<any>();
-  const contentElement = useRef();
+  const contentElement = useRef<HTMLElement | null>(null);
+  const contentElementResizeObserver = useRef<ResizeObserver | null>();
 
   const updateBodyStyles = useCallback(
     (_event?: EventInit, entering?: boolean) => {
@@ -28,14 +37,14 @@ export const useBodyStyles = (
         const headerDOM = dialog.querySelector(`.${prefix('header')}`);
         const footerDOM = dialog.querySelector(`.${prefix('footer')}`);
 
-        headerHeight = headerDOM ? helper.getHeight(headerDOM) + headerHeight : headerHeight;
-        footerHeight = footerDOM ? helper.getHeight(footerDOM) + footerHeight : footerHeight;
+        headerHeight = headerDOM ? getHeight(headerDOM) + headerHeight : headerHeight;
+        footerHeight = footerDOM ? getHeight(footerDOM) + footerHeight : footerHeight;
 
         /**
          * Header height + Footer height + Dialog margin
          */
         const excludeHeight = headerHeight + footerHeight + (entering ? 70 : 60);
-        const bodyHeight = helper.getHeight(window) - excludeHeight;
+        const bodyHeight = getHeight(window) - excludeHeight;
         const maxHeight = scrollHeight >= bodyHeight ? bodyHeight : scrollHeight;
         styles.maxHeight = maxHeight;
       }
@@ -47,26 +56,39 @@ export const useBodyStyles = (
 
   const onDestroyEvents = useCallback(() => {
     windowResizeListener.current?.off?.();
-    if (contentElement.current) {
-      unbindElementResize(contentElement.current);
-    }
+    contentElementResizeObserver.current?.disconnect();
+    windowResizeListener.current = null;
+    contentElementResizeObserver.current = null;
   }, []);
 
   const onChangeBodyStyles = useCallback(
     (entering?: boolean) => {
-      if (overflow && !drawer) {
-        updateBodyStyles(null, entering);
-        contentElement.current = ref.current?.querySelector(`.${prefix('content')}`);
-        windowResizeListener.current = helper.on(window, 'resize', updateBodyStyles);
-        bindElementResize(contentElement.current, updateBodyStyles);
+      if (!overflow || size === 'full') {
+        setBodyStyles(null);
+        return;
+      }
+
+      if (ref.current) {
+        updateBodyStyles(undefined, entering);
+
+        contentElement.current = ref.current.querySelector(`.${prefix('content')}`);
+
+        if (!windowResizeListener.current) {
+          windowResizeListener.current = on(window, 'resize', updateBodyStyles);
+        }
+
+        if (contentElement.current && !contentElementResizeObserver.current) {
+          contentElementResizeObserver.current = new ResizeObserver(() => updateBodyStyles());
+          contentElementResizeObserver.current.observe(contentElement.current);
+        }
       }
     },
-    [drawer, overflow, prefix, ref, updateBodyStyles]
+    [overflow, prefix, ref, size, updateBodyStyles]
   );
 
   useEffect(() => {
-    onDestroyEvents();
-  }, [onDestroyEvents]);
+    return onDestroyEvents;
+  }, []);
 
-  return [overflow ? bodyStyles : {}, onChangeBodyStyles, onDestroyEvents];
+  return [overflow ? bodyStyles : null, onChangeBodyStyles, onDestroyEvents];
 };

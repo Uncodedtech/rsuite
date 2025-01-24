@@ -1,44 +1,69 @@
 <!--start-code-->
 
 ```js
-/**
- * import data from
- * https://github.com/rsuite/rsuite/blob/master/docs/public/data/users-role.json
- */
+import { SelectPicker } from 'rsuite';
+import { FaUserGroup, FaUser } from 'react-icons/fa6';
+import { mockUsers } from './mock';
 
-const instance = (
+/**
+ *  Data structure:
+ *  [
+ *    { firstLetter: 'A', name: 'Alan', firstName: 'Alan' },
+ *    { firstLetter: 'B', name: 'Benson', firstName: 'Benson' },
+ *  ]
+ */
+const data = mockUsers(100)
+  .map(item => {
+    const firstLetter = item.firstName[0].toUpperCase();
+    return { firstLetter, ...item };
+  })
+  .sort((a, b) => -b.firstLetter.localeCompare(a.firstLetter));
+
+const App = () => (
   <SelectPicker
     data={data}
-    style={{ width: 224 }}
-    groupBy="role"
+    groupBy="firstLetter"
+    labelKey="firstName"
+    valueKey="name"
     placeholder="Select User"
-    renderMenuItem={(label, item) => {
-      return (
-        <div>
-          <i className="rs-icon rs-icon-user" /> {label}
-        </div>
-      );
-    }}
-    renderMenuGroup={(label, item) => {
-      return (
-        <div>
-          <i className="rs-icon rs-icon-group" /> {label} - ({item.children.length})
-        </div>
-      );
-    }}
-    renderValue={(value, item) => {
-      return (
-        <div>
-          <span style={{ color: '#575757' }}>
-            <i className="rs-icon rs-icon-user" /> User :
-          </span>{' '}
-          {value}
-        </div>
-      );
-    }}
+    renderMenuItem={renderMenuItem}
+    renderMenuGroup={renderMenuGroup}
+    renderValue={renderValue}
   />
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+const renderMenuItem = (label, item) => {
+  return (
+    <Box>
+      <FaUser /> <span>{label}</span>
+    </Box>
+  );
+};
+
+const renderMenuGroup = (label, item) => {
+  return (
+    <Box>
+      <FaUserGroup />
+      <span>
+        {label} - ({item.children.length})
+      </span>
+    </Box>
+  );
+};
+
+const renderValue = (value, items) => {
+  return (
+    <Box>
+      <FaUserGroup /> User: {value}
+    </Box>
+  );
+};
+
+const Box = ({ children }) => {
+  return <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>{children}</div>;
+};
 ```
 
 <!--end-code-->

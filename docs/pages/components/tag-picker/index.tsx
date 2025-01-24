@@ -1,18 +1,43 @@
 import React from 'react';
-import { TagPicker, Button, Tag } from 'rsuite';
-import lodashRemove from 'lodash/remove';
-import fetch from 'isomorphic-fetch';
+import { TagPicker, Button, Tag, Checkbox, VStack, HStack } from 'rsuite';
 import DefaultPage from '@/components/Page';
-import useFetchData from '@/utils/useFetchData';
-import Spinner from '@rsuite/icons/legacy/Spinner';
-import User from '@rsuite/icons/legacy/User';
-import Group from '@rsuite/icons/legacy/Group';
+import ImportGuide from '@/components/ImportGuide';
+import SpinnerIcon from '@rsuite/icons/legacy/Spinner';
+import { FaUserGroup, FaUser } from 'react-icons/fa6';
+
+import { importFakerString, mockUsers, mockUsersString, sandboxFakerVersion } from '@/utils/mock';
+
+const mockfile = {
+  name: 'mock.js',
+  content: [importFakerString, mockUsersString].join('\n')
+};
+
+const sandboxDependencies = {
+  ...sandboxFakerVersion
+};
+
+const inDocsComponents = {
+  'import-guide': () => <ImportGuide components={['TagPicker']} />
+};
 
 export default function Page() {
-  const { response: data } = useFetchData('users-role');
   return (
     <DefaultPage
-      dependencies={{ Tag, TagPicker, Button, Spinner, lodashRemove, data, fetch, User, Group }}
+      inDocsComponents={inDocsComponents}
+      sandboxDependencies={sandboxDependencies}
+      sandboxFiles={[mockfile]}
+      dependencies={{
+        mockUsers,
+        Checkbox,
+        Tag,
+        TagPicker,
+        Button,
+        VStack,
+        HStack,
+        SpinnerIcon,
+        FaUserGroup,
+        FaUser
+      }}
     />
   );
 }

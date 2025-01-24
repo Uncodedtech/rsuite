@@ -1,28 +1,25 @@
 <!--start-code-->
 
 ```js
-/**
- * import { Rate } from 'rsuite'
- * import FrownIcon from '@rsuite/icons/legacy/FrownO';
- * import MehIcon from '@rsuite/icons/legacy/MehO';
- * import SmileIcon from '@rsuite/icons/legacy/SmileO';
- */
+import { Rate } from 'rsuite';
+import { FaFrown, FaMeh, FaSmile } from 'react-icons/fa';
+
 const renderCharacter = (value, index) => {
   // unselected character
   if (value < index + 1) {
-    return <MehIcon />;
+    return <FaMeh />;
   }
   if (value < 3) {
-    return <FrownIcon style={{ color: '#99A9BF' }} />;
+    return <FaFrown style={{ color: '#99A9BF' }} />;
   }
   if (value < 4) {
-    return <MehIcon style={{ color: '#F4CA1D' }} />;
+    return <FaMeh style={{ color: '#F4CA1D' }} />;
   }
-  return <SmileIcon style={{ color: '#ff9800' }} />;
+  return <FaSmile style={{ color: '#ff9800' }} />;
 };
 
-const instance = (
-  <div>
+const App = () => (
+  <>
     <div>
       <Rate defaultValue={1} renderCharacter={renderCharacter} />
     </div>
@@ -42,10 +39,10 @@ const instance = (
     <hr />
 
     <Rate max={10} defaultValue={2} />
-  </div>
+  </>
 );
 
-ReactDOM.render(instance);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

@@ -4,7 +4,7 @@
 
 ## 获取组件
 
-<!--{include:(components/nav/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## 演示
 
@@ -19,19 +19,19 @@
 - 'default' (默认值) 默认导航。
 - 'tabs' 标签式的导航。
 - 'subtle' 弱化的导航。
+- 'pills' 胶囊式的导航。
 
 <!--{include:`appearance.md`}-->
 
-> 针对 subtle/tabs 导航，可以设置一个 `reversed` 属性颠倒方向，用来适配导航在上下左右都可以使用。
+### Reversed
+
+<!--{include:`reversed.md`}-->
 
 ### 垂直布局
 
 <!--{include:`vertical.md`}-->
 
-### 设置选项状态
-
-- active 激活
-- disabled 禁用
+### 禁用项
 
 <!--{include:`status.md`}-->
 
@@ -43,8 +43,6 @@
 
 <!--{include:`dropdown.md`}-->
 
-> 当使用多级导航时，直接使用 `<Dropdown>` 组件。
-
 ### 设置图标
 
 <!--{include:`icon.md`}-->
@@ -53,28 +51,21 @@
 
 <!--{include:`with-router.md`}-->
 
-### 扩展：响应式
-
-<!--{include:`responsive-nav.md`}-->
-
-### 扩展：响应式
-
-<!--{include:`removable-nav.md`}-->
+> [与 React Router 中的 Link 组合](/zh/guide/composition/#react-router-dom)
 
 ## Props
 
 ### `<Nav>`
 
-| 属性名称    | 类型`(默认值)`                                    | 描述                                          |
-| ----------- | ------------------------------------------------- | --------------------------------------------- |
-| activeKey   | string                                            | 激活的 `key`, 对应 `<Nav.Item>` 中 `eventKey` |
-| appearance  | enum: 'default', 'tabs', 'subtle' `('default')`   | 设置外观                                      |
-| children \* | ChildrenArray&lt;NavItem or Dropdown&gt;          | 组件内容                                      |
-| classPrefix | string `('nav')`                                  | 组件 CSS 类的前缀                             |
-| justified   | boolean                                           | 宽度自适应                                    |
-| onSelect    | (eventKey: string, event: SyntheticEvent) => void | 选择事件触发的回调函数                        |
-| pullRight   | boolean                                           | 显示在右侧                                    |
-| vertical    | boolean                                           | 垂直导航                                      |
+| 属性名称    | 类型`(默认值)`                                                       | 描述                                          |
+| ----------- | -------------------------------------------------------------------- | --------------------------------------------- |
+| activeKey   | string                                                               | 激活的 `key`, 对应 `<Nav.Item>` 中 `eventKey` |
+| appearance  | 'default' &#124; 'tabs' &#124; 'subtle' &#124; 'pills' `('default')` | 设置外观                                      |
+| children \* | ChildrenArray&lt;NavItem or Dropdown&gt;                             | 组件内容                                      |
+| classPrefix | string `('nav')`                                                     | 组件 CSS 类的前缀                             |
+| justified   | boolean                                                              | 宽度自适应                                    |
+| onSelect    | (eventKey: string, event: SyntheticEvent) => void                    | 选择事件触发的回调函数                        |
+| vertical    | boolean                                                              | 垂直导航                                      |
 
 ### `<Nav.Item>`
 
@@ -84,10 +75,19 @@
 | as          | ElementType`('a')`                | 为组件自定义元素类型   |
 | children \* | ReactNode                         | 组件内容               |
 | disabled    | boolean                           | 禁用状态               |
+| eventKey    | string                            | 当前选项的值           |
 | href        | string                            | 链接                   |
 | icon        | Element&lt;typeof Icon&gt;        | 设置图标               |
 | onSelect    | (eventKey: string, event) => void | 选择事件触发的回调函数 |
 
-### `<Nav.Dropdown>`
+### `<Nav.Menu>`
 
-- [继承 Dropdown 组件](/zh/components/dropdown#Props)
+| 属性名称      | 类型                                           | 描述                            |
+| ------------- | ---------------------------------------------- | ------------------------------- |
+| icon          | ReactElement                                   | 展开菜单的导航项图标            |
+| noCaret       | boolean `(false)`                              | 是否隐藏小箭头图标              |
+| onClose       | (event: SyntheticEvent) => void                | 菜单关闭时的回调                |
+| onOpen        | (event: SyntheticEvent) => void                | 菜单开启时的回调                |
+| onToggle      | (open: boolean, event: SyntheticEvent) => void | 菜单开启/关闭时的回调           |
+| openDirection | "start"&#124;"end" `("end")`                   | 菜单开启的方向 (仅适用于子菜单) |
+| title         | ReactNode                                      | 展开菜单的导航项内容            |

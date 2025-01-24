@@ -1,7 +1,7 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { useClassNames } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import { forwardRef } from '@/internals/utils';
+import { useClassNames } from '@/internals/hooks';
+import type { WithAsProps } from '@/internals/types';
 
 export interface FlexboxGridItemProps extends WithAsProps {
   /** spacing between grids */
@@ -11,16 +11,20 @@ export interface FlexboxGridItemProps extends WithAsProps {
   order?: number;
 }
 
-const defaultProps: Partial<FlexboxGridItemProps> = {
-  as: 'div',
-  classPrefix: 'flex-box-grid-item',
-  colspan: 0,
-  order: 0
-};
-
-const FlexboxGridItem: RsRefForwardingComponent<'div', FlexboxGridItemProps> = React.forwardRef(
+/**
+ * The `FlexboxGrid.Item` component is used to specify the layout of the child element in the `FlexboxGrid` component.
+ * @see https://rsuitejs.com/components/flexbox-grid
+ */
+const FlexboxGridItem = forwardRef<'div', FlexboxGridItemProps>(
   (props: FlexboxGridItemProps, ref) => {
-    const { as: Component, className, classPrefix, colspan, order, ...rest } = props;
+    const {
+      as: Component = 'div',
+      className,
+      classPrefix = 'flex-box-grid-item',
+      colspan = 0,
+      order = 0,
+      ...rest
+    } = props;
 
     const { merge, withClassPrefix } = useClassNames(classPrefix);
     const classes = merge(
@@ -36,13 +40,5 @@ const FlexboxGridItem: RsRefForwardingComponent<'div', FlexboxGridItemProps> = R
 );
 
 FlexboxGridItem.displayName = 'FlexboxGridItem';
-FlexboxGridItem.defaultProps = defaultProps;
-FlexboxGridItem.propTypes = {
-  as: PropTypes.elementType,
-  className: PropTypes.string,
-  colspan: PropTypes.number,
-  order: PropTypes.number,
-  classPrefix: PropTypes.string
-};
 
 export default FlexboxGridItem;

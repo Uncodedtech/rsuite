@@ -4,15 +4,15 @@ Used for system notifications. Generally used to push messages.
 
 ## Import
 
-<!--{include:(components/notification/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## Examples
 
-### Default
+### Basic
 
 <!--{include:`basic.md`}-->
 
-### Message type
+### Types
 
 <!--{include:`type.md`}-->
 
@@ -24,18 +24,17 @@ Used for system notifications. Generally used to push messages.
 
 <!--{include:`with-toaster.md`}-->
 
-## Props & Methods
+## Props
 
 ### `<Notification>`
 
-| Property    | Type `(Default)`                                     | Description                                                                                                        |
-| ----------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| children \* | ReactNode                                            | The description of the message box                                                                                 |
-| closable    | boolean                                              | The remove button is displayed.                                                                                    |
-| duration    | number `(4500)`                                      | Delay automatic removal of messages. When set to 0, the message is not automatically removed. (Unit: milliseconds) |
-| header \*   | string                                               | The title of the message box                                                                                       |
-| onClose     | () => void                                           | Callback after the message is removed                                                                              |
-| placement   | enum: [NotificationPlacement](#types)`('topCenter')` | The placement of the message box.                                                                                  |
-| type        | enum: 'info', 'success', 'warning', 'error'          | The type of the message box.                                                                                       |
+| Property    | Type `(Default)`                                        | Description                           |
+| ----------- | ------------------------------------------------------- | ------------------------------------- |
+| children \* | ReactNode                                               | The description of the message box    |
+| closable    | boolean                                                 | The remove button is displayed.       |
+| header \*   | string                                                  | The title of the message box          |
+| onClose     | () => void                                              | Callback after the message is removed |
+| placement   | [Placement](#code-ts-placement-code)`('topCenter')`     | The placement of the message box.     |
+| type        | 'info' &#124; 'success' &#124; 'warning' &#124; 'error' | The type of the message box.          |
 
-<!--{include:(components/notification/en-US/toaster.md)}-->
+<!--{include:(_common/types/placement-toaster.md)}-->

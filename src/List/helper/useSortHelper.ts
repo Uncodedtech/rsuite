@@ -1,6 +1,5 @@
-import { on } from 'dom-lib';
+import on from 'dom-lib/on';
 import { MouseEventHandler, useCallback, useRef, useState } from 'react';
-import { Offset } from '../../@types/common';
 import AutoScroller from './AutoScroller';
 import {
   Axis,
@@ -12,9 +11,11 @@ import {
   setTransitionDuration,
   setTranslate3d
 } from './utils';
-import useManager, { Collection } from './useManager';
+import type { EdgeOffset } from './utils';
+import { useIsMounted } from '@/internals/hooks';
+import useManager, { Collection, ManagedItem } from './useManager';
 
-interface MovedItemInfo {
+export interface MovedItemInfo {
   collection: Collection;
   node: HTMLElement;
   newIndex: number;
@@ -44,35 +45,29 @@ export type SortConfig = {
   onSort?(payload?: MovedItemInfo, event?: MouseEvent): void;
 };
 
+const helperElementClass = 'rs-list-item-helper';
+const holderElementClass = 'rs-list-item-holder';
+
 const useSortHelper = (config: SortConfig) => {
-  const {
-    autoScroll,
-    pressDelay,
-    transitionDuration,
-    onSort,
-    onSortEnd,
-    onSortMove,
-    onSortStart
-  } = config;
+  const { autoScroll, pressDelay, transitionDuration, onSort, onSortEnd, onSortMove, onSortStart } =
+    config;
   const [sorting, setSorting] = useState<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const pressTimer = useRef<any>();
   const { listItemRegister, getManagedItem, getOrderedItems } = useManager();
+  const isMounted = useIsMounted();
 
   /**
    * start dragging
    * */
   const handlePress = useCallback(
-    (mouseDownEvent, targetNode, curManagedItem) => {
-      const listItemBaseClassName = targetNode.classList[0]; // get list item base className
-      const helperElementClass = `${listItemBaseClassName}-helper`;
-      const holderElementClass = `${listItemBaseClassName}-holder`;
-
+    (mouseDownEvent, _targetNode, curManagedItem: ManagedItem) => {
+      if (!isMounted()) return;
       // data
-      const containerElement = containerRef.current;
+      const containerElement = containerRef.current as HTMLDivElement;
       const activeNode = curManagedItem.node;
-      const activeNodeOldIndex = curManagedItem.info.index;
-      let activeNodeNextIndex = curManagedItem.info.index;
+      const activeNodeOldIndex = curManagedItem.info.index ?? 0;
+      let activeNodeNextIndex: number = curManagedItem.info.index ?? 0;
       let activeNodeHolderTranslate: Axis = { x: 0, y: 0 };
       let animatedNodesOffset: Axis[] = []; // all list item offset
 
@@ -82,15 +77,15 @@ const useSortHelper = (config: SortConfig) => {
         x: scrollContainer.scrollLeft,
         y: scrollContainer.scrollTop
       };
-      const autoScroller = new AutoScroller(scrollContainer, (offset: Offset) => {
-        activeNodeHolderTranslate.x += offset.left;
-        activeNodeHolderTranslate.y += offset.top;
+      const autoScroller = new AutoScroller(scrollContainer, (offset: EdgeOffset) => {
+        activeNodeHolderTranslate.x += offset.left as number;
+        activeNodeHolderTranslate.y += offset.top as number;
       });
 
       const activeNodeBoundingClientRect = activeNode.getBoundingClientRect();
       const activeNodeOffsetEdge = getEdgeOffset(activeNode, containerElement);
       const activeNodeStyle = getComputedStyle(activeNode);
-      let activeNodeHelper = activeNode.cloneNode(true) as HTMLElement;
+      let activeNodeHelper: HTMLElement | null = activeNode.cloneNode(true) as HTMLElement;
       activeNodeHelper?.classList.add(helperElementClass);
       setInlineStyles(activeNodeHelper, {
         position: 'fixed',
@@ -102,7 +97,7 @@ const useSortHelper = (config: SortConfig) => {
       activeNode.classList.add(holderElementClass);
       document.body.appendChild(activeNodeHelper);
 
-      const getContainerScrollDelta = (): Offset => ({
+      const getContainerScrollDelta = (): EdgeOffset => ({
         left: scrollContainer.scrollLeft - initScroll.x,
         top: scrollContainer.scrollTop - initScroll.y
       });
@@ -131,17 +126,21 @@ const useSortHelper = (config: SortConfig) => {
             x: offset.x - mouseDownEvent.pageX,
             y: offset.y - mouseDownEvent.pageY
           };
-          setTranslate3d(activeNodeHelper, activeNodeHolderTranslate);
+
+          if (activeNodeHelper) {
+            setTranslate3d(activeNodeHelper, activeNodeHolderTranslate);
+          }
+
           // animate
           activeNodeNextIndex = -1;
           const listItemManagerRefs = getOrderedItems(curManagedItem.info.collection);
-          const sortingOffsetY =
-            activeNodeOffsetEdge.top + activeNodeHolderTranslate.y + containerScrollDelta.top;
-          const activeNodeHeight = parseFloat(activeNodeStyle.height) || 0;
+          const aTop = activeNodeOffsetEdge.top || 0;
+          const cTop = containerScrollDelta.top || 0;
+          const sortingOffsetY = aTop + activeNodeHolderTranslate.y + cTop;
 
           for (let i = 0, len = listItemManagerRefs.length; i < len; i++) {
             const currentNode = listItemManagerRefs[i].node;
-            const currentNodeIndex = listItemManagerRefs[i].info.index;
+            const currentNodeIndex = listItemManagerRefs[i].info.index ?? 0;
             const offsetY =
               activeNodeBoundingClientRect.height > currentNode.offsetHeight
                 ? currentNode.offsetHeight / 2
@@ -171,26 +170,33 @@ const useSortHelper = (config: SortConfig) => {
               continue;
             }
 
+            const curEdgeOffsetTop = curEdgeOffset.top || 0;
+
             if (
               prvNode &&
               currentNodeIndex > activeNodeOldIndex &&
-              sortingOffsetY + offsetY >= curEdgeOffset.top
+              sortingOffsetY + offsetY >= curEdgeOffsetTop
             ) {
-              translate.y = -activeNodeHeight;
+              const yOffset = (prvNode.edgeOffset?.top || 0) - curEdgeOffsetTop;
+
+              translate.y = yOffset;
+
               animatedNodesOffset[currentNodeIndex] = {
                 x: 0,
-                y: currentNode.offsetHeight
+                y: -yOffset
               };
               activeNodeNextIndex = currentNodeIndex;
             } else if (
               nextNode &&
               currentNodeIndex < activeNodeOldIndex &&
-              sortingOffsetY <= curEdgeOffset.top + offsetY
+              sortingOffsetY <= curEdgeOffsetTop + offsetY
             ) {
-              translate.y = activeNodeHeight;
+              const yOffset = (nextNode.edgeOffset?.top || 0) - curEdgeOffsetTop;
+
+              translate.y = yOffset;
               animatedNodesOffset[currentNodeIndex] = {
                 x: 0,
-                y: -currentNode.offsetHeight
+                y: -yOffset
               };
               if (activeNodeNextIndex === -1) {
                 activeNodeNextIndex = currentNodeIndex;
@@ -220,6 +226,7 @@ const useSortHelper = (config: SortConfig) => {
               height: activeNodeBoundingClientRect.height,
               translate: activeNodeHolderTranslate,
               maxTranslate: {
+                x: 0,
                 y:
                   containerBoundingRect.top +
                   containerBoundingRect.height -
@@ -227,6 +234,7 @@ const useSortHelper = (config: SortConfig) => {
                   activeNodeBoundingClientRect.height / 2
               },
               minTranslate: {
+                x: 0,
                 y:
                   containerBoundingRect.top -
                   activeNodeBoundingClientRect.top -
@@ -257,14 +265,18 @@ const useSortHelper = (config: SortConfig) => {
 
           const holderTranslate = getHolderTranslate();
           const containerScrollDelta = getContainerScrollDelta();
-          setTranslate3d(activeNodeHelper, {
-            x: holderTranslate.x - containerScrollDelta.left,
-            y: holderTranslate.y - containerScrollDelta.top
-          });
-          setTransitionDuration(activeNodeHelper, transitionDuration);
+
+          if (activeNodeHelper) {
+            setTranslate3d(activeNodeHelper, {
+              x: holderTranslate.x - (containerScrollDelta.left || 0),
+              y: holderTranslate.y - (containerScrollDelta.top || 0)
+            });
+            setTransitionDuration(activeNodeHelper, transitionDuration);
+          }
 
           // wait for animation
           setTimeout(() => {
+            if (!isMounted()) return;
             // Remove the helper from the DOM
             activeNodeHelper?.parentNode?.removeChild(activeNodeHelper);
             activeNodeHelper = null;
@@ -316,7 +328,16 @@ const useSortHelper = (config: SortConfig) => {
         mouseDownEvent.nativeEvent
       );
     },
-    [autoScroll, getOrderedItems, onSort, onSortEnd, onSortMove, onSortStart, transitionDuration]
+    [
+      autoScroll,
+      getOrderedItems,
+      isMounted,
+      onSort,
+      onSortEnd,
+      onSortMove,
+      onSortStart,
+      transitionDuration
+    ]
   );
 
   /**
@@ -325,8 +346,10 @@ const useSortHelper = (config: SortConfig) => {
   const handleStart: MouseEventHandler = useCallback(
     mouseDownEvent => {
       const triggeredNode = mouseDownEvent.target as HTMLElement;
-      const targetNode = closestNode(triggeredNode, el => Boolean(getManagedItem(el)));
-      const curManagedItem = getManagedItem(targetNode);
+      const targetNode = closestNode(triggeredNode, el =>
+        Boolean(getManagedItem(el))
+      ) as HTMLElement;
+      const curManagedItem = getManagedItem(targetNode) as ManagedItem;
       if (
         // is not secondary button pressed
         mouseDownEvent.button !== 2 &&

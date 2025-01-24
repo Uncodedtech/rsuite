@@ -29,14 +29,35 @@ import {
 } from 'rsuite';
 
 import DefaultPage from '@/components/Page';
-import useFetchData from '@/utils/useFetchData';
-import Avatar from '@rsuite/icons/legacy/Avatar';
+import ImportGuide from '@/components/ImportGuide';
+import AvatarIcon from '@rsuite/icons/legacy/Avatar';
+import { mockTreeData, mockTreeDataToString } from '@/utils/mock';
+
+const mockfile = {
+  name: 'mock.js',
+  content: mockTreeDataToString
+};
+
+const inDocsComponents = {
+  'import-guide': () => (
+    <ImportGuide
+      components={['Form']}
+      hasCssComponents={[
+        'Form',
+        'FormControl',
+        'FormControlLabel',
+        'FormErrorMessage',
+        'FormHelpText',
+        'FormGroup'
+      ]}
+    />
+  )
+};
 
 export default function Page() {
-  const { response: data } = useFetchData('province-simplified');
-  const { response: pickerData } = useFetchData('users-role');
   return (
     <DefaultPage
+      inDocsComponents={inDocsComponents}
       dependencies={{
         Form,
         Input,
@@ -59,15 +80,15 @@ export default function Page() {
         DateRangePicker,
         TagPicker,
         InputPicker,
-        pickerData,
         Cascader,
         MultiCascader,
         Message,
-        data,
         Rate,
         Uploader,
-        Avatar
+        mockTreeData,
+        AvatarIcon
       }}
+      sandboxFiles={[mockfile]}
     />
   );
 }

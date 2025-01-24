@@ -1,11 +1,22 @@
 <!--start-code-->
 
 ```js
-const model = Schema.Model({
-  name: Schema.Types.StringType()
-    .isEmail('Please enter a valid email address.')
-    .isRequired('This field is required.')
-});
+import { Form, Button, RadioGroup, Radio, Schema, Panel, FlexboxGrid } from 'rsuite';
+import JSONTree from 'react-json-tree';
+
+const JSONView = ({ formValue, formError }) => (
+  <div style={{ marginBottom: 10 }}>
+    <Panel className="json-tree-wrapper" header={<p>formValue</p>}>
+      <JSONTree data={formValue} />
+    </Panel>
+
+    <Panel className="json-tree-wrapper" header={<p>formError</p>}>
+      <JSONTree data={formError} />
+    </Panel>
+  </div>
+);
+
+const RadioLabel = ({ children }) => <label style={{ padding: 7 }}>{children}</label>;
 
 const Field = React.forwardRef((props, ref) => {
   const { name, message, label, accepter, error, ...rest } = props;
@@ -18,13 +29,11 @@ const Field = React.forwardRef((props, ref) => {
   );
 });
 
-const styles = {
-  radioGroupLabel: {
-    padding: '8px 12px',
-    display: 'inline-block',
-    verticalAlign: 'middle'
-  }
-};
+const model = Schema.Model({
+  name: Schema.Types.StringType()
+    .isEmail('Please enter a valid email address.')
+    .isRequired('This field is required.')
+});
 
 const App = () => {
   const formRef = React.useRef();
@@ -52,7 +61,7 @@ const App = () => {
             setFormError({});
           }}
         >
-          <span style={styles.radioGroupLabel}>checkTrigger: </span>
+          <RadioLabel>checkTrigger: </RadioLabel>
           <Radio value="blur">blur</Radio>
           <Radio value="change">change</Radio>
           <Radio value="none">none</Radio>
@@ -80,7 +89,7 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

@@ -3,7 +3,7 @@ const path = require('path');
 const webpack = require('webpack');
 
 /**
- * @type {import('webpack').webpack.Configuration}
+ * @type {import('webpack').Configuration}
  */
 module.exports = {
   output: {
@@ -13,14 +13,21 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.tsx', '.js'],
     alias: {
-      '@test': path.resolve(__dirname, './test')
+      '@test': path.resolve(__dirname, './test'),
+      '@': path.resolve(__dirname, './src')
+    },
+    /**
+     * Polyfill Node.js util module which is used by sinon
+     *
+     * @see https://stackoverflow.com/a/64580815
+     */
+    fallback: {
+      util: require.resolve('util/')
     }
   },
   plugins: [
     new webpack.DefinePlugin({
-      'process.env': {
-        RUN_ENV: JSON.stringify(process.env.RUN_ENV)
-      }
+      process: { env: { RUN_ENV: JSON.stringify(process.env.RUN_ENV) } }
     })
   ],
   module: {
@@ -43,7 +50,8 @@ module.exports = {
             loader: 'less-loader', // compiles Less to CSS,
             options: {
               lessOptions: {
-                javascriptEnabled: true
+                javascriptEnabled: true,
+                modifyVars: { '@enable-css-reset': false }
               }
             }
           }

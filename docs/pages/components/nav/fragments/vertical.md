@@ -1,14 +1,12 @@
 <!--start-code-->
 
 ```js
-const styles = { width: 100 };
+import { Nav, Row, Col } from 'rsuite';
 
 const CustomNav = ({ active, onSelect, ...props }) => {
   return (
-    <Nav {...props} vertical activeKey={active} onSelect={onSelect} style={styles}>
-      <Nav.Item eventKey="home" icon={<Home />}>
-        Home
-      </Nav.Item>
+    <Nav {...props} vertical activeKey={active} onSelect={onSelect} style={{ width: 100 }}>
+      <Nav.Item eventKey="home">Home</Nav.Item>
       <Nav.Item eventKey="news">News</Nav.Item>
       <Nav.Item eventKey="solutions">Solutions</Nav.Item>
       <Nav.Item eventKey="products">Products</Nav.Item>
@@ -17,7 +15,7 @@ const CustomNav = ({ active, onSelect, ...props }) => {
   );
 };
 
-const Demo = () => {
+const App = () => {
   const [active, setActive] = React.useState('home');
 
   return (
@@ -25,24 +23,26 @@ const Demo = () => {
       <Col md={4}>
         <CustomNav active={active} onSelect={setActive} />
       </Col>
-
-      <Col md={6}>
+      <Col md={4}>
         <CustomNav appearance="tabs" active={active} onSelect={setActive} />
       </Col>
       <Col md={4}>
         <CustomNav appearance="tabs" reversed active={active} onSelect={setActive} />
       </Col>
-      <Col md={6}>
+      <Col md={4}>
         <CustomNav appearance="subtle" active={active} onSelect={setActive} />
       </Col>
       <Col md={4}>
         <CustomNav appearance="subtle" reversed active={active} onSelect={setActive} />
       </Col>
+      <Col md={4}>
+        <CustomNav appearance="pills" reversed active={active} onSelect={setActive} />
+      </Col>
     </Row>
   );
 };
 
-ReactDOM.render(<Demo />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

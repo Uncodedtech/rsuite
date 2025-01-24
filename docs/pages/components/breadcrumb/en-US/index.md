@@ -4,11 +4,11 @@ Used to display the current page path and quickly return to the history page.
 
 ## Import
 
-<!--{include:(components/breadcrumb/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## Examples
 
-### Default
+### Basic
 
 <!--{include:`basic.md`}-->
 
@@ -25,6 +25,8 @@ Should automatically collapse if there are more than 5 items. Use `maxItems` to 
 ### Used with `Link` in `next/link`
 
 <!--{include:`with-router.md`}-->
+
+> [ Used with `Link` in React Router](/guide/composition/#react-router-dom)
 
 ### Accessibility
 
@@ -57,19 +59,20 @@ WAI-ARIA:https://www.w3.org/TR/wai-aria-practices/#breadcrumb
 
 ### `<Breadcrumb>`
 
-| Property    | Type `(Default)`            | Description                                                                       |
-| ----------- | --------------------------- | --------------------------------------------------------------------------------- |
-| as          | ElementType `('nav')`       | You can use a custom element type for this component.                             |
-| classPrefix | string `('breadcrumb')`     | The prefix of the component CSS class                                             |
-| maxItems    | numner`(5)`                 | Set the maximum number of breadcrumbs to display                                  |
-| onExpand    | (event: MouseEvent) => void | A function to be called when you are in the collapsed view and click the ellipsis |
-| separator   | ReactNode `('/')`           | Custom separator                                                                  |
+| Property    | Type `(Default)`                                | Description                                                                         |
+| ----------- | ----------------------------------------------- | ----------------------------------------------------------------------------------- |
+| as          | ElementType `('nav')`                           | You can use a custom element type for this component.                               |
+| classPrefix | string `('breadcrumb')`                         | The prefix of the component CSS class                                               |
+| locale      | [BreadcrumbLocaleType](/guide/i18n/#breadcrumb) | Define localization settings to show component text in the user's regional language |
+| maxItems    | numner`(5)`                                     | Set the maximum number of breadcrumbs to display                                    |
+| onExpand    | (event: MouseEvent) => void                     | A function to be called when you are in the collapsed view and click the ellipsis   |
+| separator   | ReactNode `('/')`                               | Custom separator                                                                    |
 
 ### `<Breadcrumb.Item>`
 
-| Property    | Type `(Default)`             | Description                                           |
-| ----------- | ---------------------------- | ----------------------------------------------------- |
-| active      | boolean                      | Active state                                          |
-| as          | ElementType `('a')`          | You can use a custom element type for this component. |
-| classPrefix | string `('breadcrumb-item')` | The prefix of the component CSS class                 |
-| href        | string                       | Providing a `href` will render an `a` element         |
+| Property    | Type `(Default)`             | Description                                                                                                                                       |
+| ----------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| active      | boolean                      | Active state                                                                                                                                      |
+| as          | ElementType `('a')`          | You can use a custom element type for this component.. The default is a `span` element, and when `href` is set, it will default to an `a` element |
+| classPrefix | string `('breadcrumb-item')` | The prefix of the component CSS class                                                                                                             |
+| href        | string                       | Providing a `href` will render an `a` element                                                                                                     |

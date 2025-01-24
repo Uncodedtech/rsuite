@@ -6,6 +6,13 @@
   position: fixed;
   z-index: @zindex-drawer;
   top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+
+  &.rs-drawer-no-backdrop {
+    pointer-events: none;
+  }
 }
 
 // Container that the drawer scrolls within
@@ -15,6 +22,7 @@
   position: fixed;
   z-index: @zindex-drawer;
   box-shadow: var(--rs-drawer-shadow);
+  pointer-events: auto;
   // Prevent Chrome on Windows from adding a focus outline. For details, see
   // https://github.com/twbs/bootstrap/pull/10951.
   outline: 0;
@@ -70,7 +78,7 @@
 
   // Full page
   &-full {
-    @max-width: ~'calc(100% - @{drawer-full-size-margin})';
+    @max-width: 100%;
     @max-height: @max-width;
 
     &.rs-drawer-top,
@@ -127,6 +135,10 @@
   outline: 0;
   width: 100%;
   height: 100%;
+
+  .high-contrast-mode({
+    background-color: var(--rs-drawer-bg);
+  });
 }
 
 .rs-drawer-backdrop {
@@ -139,12 +151,12 @@
   background-color: var(--rs-bg-backdrop);
 
   // Fade for backdrop
-  &.fade {
+  &.rs-anim-fade {
     opacity: 0;
     transition: opacity 0.3s ease-in;
   }
 
-  &.in {
+  &.rs-anim-in {
     opacity: 1;
   }
 }
@@ -183,6 +195,11 @@
   flex-shrink: 0;
   text-align: right; // right align buttons
   border-top: none;
+  margin-left: auto;
+
+  .rs-drawer-title ~ & {
+    margin-left: 10px;
+  }
 
   // Properly space out buttons
   .rs-btn + .rs-btn {

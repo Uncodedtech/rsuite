@@ -1,29 +1,35 @@
 <!--start-code-->
 
 ```js
-class DateRangePickerValue extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      value: [new Date('2017-02-01'), new Date('2017-05-20')]
-    };
-  }
-  render() {
-    return (
-      <div className="field">
-        <DateRangePicker
-          value={this.state.value}
-          onChange={value => {
-            this.setState({ value });
-            console.log(value);
-          }}
-        />
-      </div>
-    );
-  }
-}
+import { DateRangePicker, Stack } from 'rsuite';
 
-ReactDOM.render(<DateRangePickerValue />);
+const App = () => {
+  const [value, setValue] = React.useState([
+    new Date('2017-02-01 01:00:00'),
+    new Date('2017-02-02 14:00:00')
+  ]);
+
+  return (
+    <Stack direction="column" spacing={8} alignItems="flex-start">
+      <label>Controlled Value:</label>
+      <DateRangePicker value={value} onChange={setValue} />
+
+      <DateRangePicker
+        value={value}
+        onChange={setValue}
+        showMeridiem
+        format="yyyy-MM-dd HH:mm:ss"
+        defaultCalendarValue={[new Date('2022-02-01 00:00:00'), new Date('2022-03-01 23:59:59')]}
+      />
+
+      <label>Uncontrolled Value:</label>
+
+      <DateRangePicker defaultValue={[new Date(), new Date()]} />
+    </Stack>
+  );
+};
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

@@ -4,11 +4,11 @@ Divider are used to group content horizontally or vertically.
 
 ## Import
 
-<!--{include:(components/divider/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## Examples
 
-### Default
+### Basic
 
 <!--{include:`basic.md`}-->
 

@@ -1,7 +1,6 @@
-import { Offset } from '../../@types/common';
-import { Axis } from './utils';
+import { Axis, EdgeOffset } from './utils';
 
-type OffsetCallback = (offset: Offset) => void;
+type OffsetCallback = (offset: EdgeOffset) => void;
 
 export interface AutoScrollerUpdatePayload {
   translate: Axis;
@@ -19,7 +18,7 @@ const ACCELERATION = 5; // for auto scroll
 class AutoScroller {
   private readonly container: HTMLElement;
   private readonly onScrollCallback: OffsetCallback;
-  private interval: NodeJS.Timeout = null;
+  private interval: NodeJS.Timeout | null = null;
 
   isAutoScrolling = true;
 
@@ -29,21 +28,17 @@ class AutoScroller {
   }
 
   clear() {
-    clearInterval(this.interval);
-    this.interval = null;
+    if (this.interval !== null) {
+      clearInterval(this.interval);
+      this.interval = null;
+    }
   }
 
   update({ translate, minTranslate, maxTranslate, width, height }: AutoScrollerUpdatePayload) {
     const direction = { x: 0, y: 0 };
     const speed = { x: 0, y: 0 };
-    const {
-      scrollTop,
-      scrollLeft,
-      scrollHeight,
-      scrollWidth,
-      clientHeight,
-      clientWidth
-    } = this.container;
+    const { scrollTop, scrollLeft, scrollHeight, scrollWidth, clientHeight, clientWidth } =
+      this.container;
 
     const isTop = scrollTop === 0;
     const isBottom = scrollTop === scrollHeight - clientHeight;

@@ -1,28 +1,45 @@
 <!--start-code-->
 
 ```js
-const instance = (
-  <div>
-    <Nav>
-      <Nav.Item>Default Item</Nav.Item>
-      <Nav.Item active>Active Item</Nav.Item>
-      <Nav.Item disabled>Disabled Item</Nav.Item>
+import { Nav, VStack } from 'rsuite';
+
+const App = () => (
+  <VStack spacing={30}>
+    <Nav defaultActiveKey="1">
+      <Nav.Item eventKey="1">Item 1</Nav.Item>
+      <Nav.Item eventKey="2" disabled>
+        Item 2
+      </Nav.Item>
+      <Nav.Item eventKey="3">Item 3</Nav.Item>
     </Nav>
-    <br />
-    <Nav appearance="tabs">
-      <Nav.Item>Default Item</Nav.Item>
-      <Nav.Item active>Active Item</Nav.Item>
-      <Nav.Item disabled>Disabled Item</Nav.Item>
+
+    <Nav appearance="tabs" defaultActiveKey="1">
+      <Nav.Item eventKey="1">Item 1</Nav.Item>
+      <Nav.Item eventKey="2" disabled>
+        Item 2
+      </Nav.Item>
+      <Nav.Item eventKey="3">Item 3</Nav.Item>
     </Nav>
-    <br />
-    <Nav appearance="subtle">
-      <Nav.Item>Default Item</Nav.Item>
-      <Nav.Item active>Active Item</Nav.Item>
-      <Nav.Item disabled>Disabled Item</Nav.Item>
+
+    <Nav appearance="subtle" defaultActiveKey="1">
+      <Nav.Item eventKey="1">Item 1</Nav.Item>
+      <Nav.Item eventKey="2" disabled>
+        Item 2
+      </Nav.Item>
+      <Nav.Item eventKey="3">Item 3</Nav.Item>
     </Nav>
-  </div>
+
+    <Nav appearance="pills" defaultActiveKey="1">
+      <Nav.Item eventKey="1">Item 1</Nav.Item>
+      <Nav.Item eventKey="2" disabled>
+        Item 2
+      </Nav.Item>
+      <Nav.Item eventKey="3">Item 3</Nav.Item>
+    </Nav>
+  </VStack>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

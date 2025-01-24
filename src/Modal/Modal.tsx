@@ -1,21 +1,30 @@
-import React, { useRef, useMemo, useState, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
+import React, { useRef, useMemo, useState, useCallback } from 'react';
 import pick from 'lodash/pick';
-import BaseModal, { BaseModalProps, modalPropTypes } from '../Overlay/Modal';
+import on from 'dom-lib/on';
+import getAnimationEnd from 'dom-lib/getAnimationEnd';
+import BaseModal, { BaseModalProps } from '@/internals/Overlay/Modal';
 import Bounce from '../Animation/Bounce';
-import { useClassNames, mergeRefs, SIZE } from '../utils';
-import ModalDialog, { modalDialogPropTypes } from './ModalDialog';
+import ModalDialog from './ModalDialog';
 import ModalBody from './ModalBody';
 import ModalHeader from './ModalHeader';
 import ModalTitle from './ModalTitle';
 import ModalFooter from './ModalFooter';
-import helper from '../DOMHelper';
-import { useBodyStyles } from './utils';
-import { TypeAttributes, RsRefForwardingComponent } from '../@types/common';
+import { useClassNames, useWillUnmount, useUniqueId } from '@/internals/hooks';
+import { mergeRefs, forwardRef } from '@/internals/utils';
+import { ModalContext, ModalContextProps } from './ModalContext';
+import { useBodyStyles, ModalSize } from './utils';
+import { useCustom } from '../CustomProvider';
 
-export interface ModalProps extends BaseModalProps {
+const modalSizes: readonly ModalSize[] = ['xs', 'sm', 'md', 'lg', 'full'];
+
+export interface ModalProps
+  extends BaseModalProps,
+    Pick<
+      React.HTMLAttributes<HTMLElement>,
+      'role' | 'id' | 'aria-labelledby' | 'aria-describedby'
+    > {
   /** A modal can have different sizes */
-  size?: TypeAttributes.Size;
+  size?: ModalSize;
 
   /** Set the duration of the animation */
   animationTimeout?: number;
@@ -29,7 +38,10 @@ export interface ModalProps extends BaseModalProps {
   /** CSS style applied to dialog DOM nodes */
   dialogStyle?: React.CSSProperties;
 
-  /** Full screen */
+  /**
+   * Full screen
+   * @deprecated Use size="full" instead.
+   */
   full?: boolean;
 
   /** You can use a custom element type for Dialog */
@@ -38,115 +50,94 @@ export interface ModalProps extends BaseModalProps {
   /** Automatically sets the height when the body content is too long. */
   overflow?: boolean;
 
-  /** Render Modal as Drawer */
-  drawer?: boolean;
+  /** Indicates if the component should be displayed as a drawer */
+  isDrawer?: boolean;
+
+  /** Custom close button, used when rendered as a Drawer */
+  closeButton?: React.ReactNode | boolean;
 }
 
-const defaultProps: Partial<ModalProps> = {
-  classPrefix: 'modal',
-  size: 'sm',
-  animation: Bounce,
-  animationTimeout: 300,
-  dialogAs: ModalDialog,
-  backdrop: true,
-  overflow: true
+const Subcomponents = {
+  Body: ModalBody,
+  Header: ModalHeader,
+  Title: ModalTitle,
+  Footer: ModalFooter,
+  Dialog: ModalDialog
 };
 
-export interface ModalContextProps {
-  /** Pass the close event callback to the header close button. */
-  onModalClose: (event: React.MouseEvent<Element, MouseEvent>) => void;
-
-  /** Pass the latest style to body. */
-  getBodyStyles?: () => React.CSSProperties;
-
-  /** Whether this Modal is a Drawer */
-  isDrawer: boolean;
-}
-
-export const ModalContext = React.createContext<ModalContextProps>(null);
-
-interface ModalComponent extends RsRefForwardingComponent<'div', ModalProps> {
-  Body: typeof ModalBody;
-  Header: typeof ModalHeader;
-  Title: typeof ModalTitle;
-  Footer: typeof ModalFooter;
-  Dialog: typeof ModalDialog;
-}
-
-const Modal: ModalComponent = (React.forwardRef((props: ModalProps, ref) => {
+/**
+ * The `Modal` component is used to show content in a layer above the app.
+ * @see https://rsuitejs.com/components/modal
+ */
+const Modal = forwardRef<'div', ModalProps, typeof Subcomponents>((props, ref) => {
+  const { propsWithDefaults } = useCustom('Modal', props);
   const {
-    className,
-    children,
-    classPrefix,
-    dialogClassName,
-    backdropClassName,
-    backdrop,
-    dialogStyle,
-    animation,
-    open,
-    size,
-    full,
-    dialogAs: Dialog,
+    animation = Bounce,
     animationProps,
-    animationTimeout,
-    overflow,
-    drawer,
+    animationTimeout = 300,
+    'aria-labelledby': ariaLabelledby,
+    'aria-describedby': ariaDescribedby,
+    backdropClassName,
+    backdrop = true,
+    className,
+    classPrefix = 'modal',
+    dialogClassName,
+    dialogStyle,
+    dialogAs: Dialog = ModalDialog,
+    enforceFocus: enforceFocusProp,
+    full,
+    overflow = true,
+    open,
     onClose,
     onEntered,
     onEntering,
     onExited,
+    role = 'dialog',
+    size = 'sm',
+    id: idProp,
+    isDrawer = false,
+    closeButton,
     ...rest
-  } = props;
+  } = propsWithDefaults;
 
   const inClass = { in: open && !animation };
   const { merge, prefix } = useClassNames(classPrefix);
-  const classes = merge(className, prefix(size, { full }));
-
-  const dialogRef = useRef<HTMLElement>();
-  const transitionEndListener = useRef<{ off: () => void }>();
+  const [shake, setShake] = useState(false);
+  const classes = merge(className, prefix({ full, [size]: modalSizes.includes(size) }));
+  const dialogRef = useRef<HTMLElement>(null);
+  const transitionEndListener = useRef<{ off: () => void } | null>();
 
   // The style of the Modal body will be updated with the size of the window or container.
   const [bodyStyles, onChangeBodyStyles, onDestroyEvents] = useBodyStyles(dialogRef, {
     overflow,
-    drawer,
-    prefix
+    prefix,
+    size
   });
 
+  const dialogId = useUniqueId('dialog-', idProp);
   const modalContextValue = useMemo<ModalContextProps>(
     () => ({
+      dialogId,
       onModalClose: onClose,
       getBodyStyles: () => bodyStyles,
-      isDrawer: drawer
+      closeButton,
+      isDrawer
     }),
-    [onClose, bodyStyles, drawer]
+    [dialogId, onClose, closeButton, isDrawer, bodyStyles]
   );
 
-  const [shake, setShake] = useState(false);
-  const handleBackdropClick = useCallback(() => {
-    // When the value of `backdrop` is `static`, a jitter animation will be added to the dialog when clicked.
-    if (backdrop === 'static') {
-      setShake(true);
-      transitionEndListener.current = helper.on(
-        dialogRef.current,
-        helper.animation.events().end,
-        () => {
-          setShake(false);
-        }
-      );
-    }
-  }, [backdrop]);
-
   const handleExited = useCallback(
-    (node?: Element | Text) => {
+    (node: HTMLElement) => {
       onExited?.(node);
       onDestroyEvents();
       transitionEndListener.current?.off();
+      transitionEndListener.current = null;
     },
     [onDestroyEvents, onExited]
   );
 
   const handleEntered = useCallback(
-    (node?: Element | Text) => {
+    (node: HTMLElement) => {
       onEntered?.(node);
       onChangeBodyStyles();
     },
@@ -154,27 +145,91 @@ const Modal: ModalComponent = (React.forwardRef((props: ModalProps, ref) => {
   );
 
   const handleEntering = useCallback(
-    (node?: Element | Text) => {
+    (node: HTMLElement) => {
       onEntering?.(node);
       onChangeBodyStyles(true);
     },
     [onChangeBodyStyles, onEntering]
   );
 
-  useEffect(() => {
-    transitionEndListener.current?.off();
+  const backdropClick = React.useRef<boolean>();
+  const handleMouseDown = useCallback(event => {
+    backdropClick.current = event.target === event.currentTarget;
   }, []);
+
+  const handleBackdropClick = useCallback(
+    event => {
+      // Ignore click events from non-backdrop.
+      // fix: https://github.com/rsuite/rsuite/issues/3394
+      if (!backdropClick.current) {
+        return;
+      }
+
+      // Ignore click events from dialog.
+      if (event.target === dialogRef.current) {
+        return;
+      }
+
+      // Ignore click events from dialog children.
+      if (event.target !== event.currentTarget) {
+        return;
+      }
+
+      // When the value of `backdrop` is `static`, a jitter animation will be added to the dialog when clicked.
+      if (backdrop === 'static') {
+        setShake(true);
+        if (!transitionEndListener.current && dialogRef.current) {
+          //fix: https://github.com/rsuite/rsuite/blob/a93d13c14fb20cc58204babe3331d3c3da3fe1fd/src/Modal/styles/index.less#L59
+          transitionEndListener.current = on(dialogRef.current, getAnimationEnd(), () => {
+            setShake(false);
+          });
+        }
+        return;
+      }
+
+      onClose?.(event);
+    },
+    [backdrop, onClose]
+  );
+
+  useWillUnmount(() => {
+    transitionEndListener.current?.off();
+  });
+
+  let sizeKey = 'width';
+
+  if (isDrawer) {
+    const { placement } = animationProps || {};
+    // The width or height of the drawer depends on the placement.
+    sizeKey = placement === 'top' || placement === 'bottom' ? 'height' : 'width';
+  }
+
+  const enforceFocus = useMemo(() => {
+    if (typeof enforceFocusProp === 'boolean') {
+      return enforceFocusProp;
+    }
+
+    // When the Drawer is displayed and the backdrop is not displayed, the focus is not restricted.
+    if (isDrawer && backdrop === false) {
+      return false;
+    }
+  }, [backdrop, enforceFocusProp, isDrawer]);
+
+  const wrapperClassName = merge(prefix`wrapper`, {
+    [prefix`no-backdrop`]: backdrop === false
+  });
 
   return (
     <ModalContext.Provider value={modalContextValue}>
       <BaseModal
+        data-testid={isDrawer ? 'drawer-wrapper' : 'modal-wrapper'}
         {...rest}
         ref={ref}
         backdrop={backdrop}
+        enforceFocus={enforceFocus}
         open={open}
         onClose={onClose}
-        onBackdropClick={handleBackdropClick}
-        className={prefix`wrapper`}
+        className={wrapperClassName}
         onEntered={handleEntered}
         onEntering={handleEntering}
         onExited={handleExited}
@@ -184,48 +239,41 @@ const Modal: ModalComponent = (React.forwardRef((props: ModalProps, ref) => {
         animationProps={animationProps}
         dialogTransitionTimeout={animationTimeout}
         backdropTransitionTimeout={150}
+        onClick={backdrop ? handleBackdropClick : undefined}
+        onMouseDown={handleMouseDown}
       >
         {(transitionProps, transitionRef) => {
           const { className: transitionClassName, ...transitionRest } = transitionProps;
           return (
             <Dialog
+              role={role}
+              id={dialogId}
+              aria-labelledby={ariaLabelledby ?? `${dialogId}-title`}
+              aria-describedby={ariaDescribedby}
+              style={{ [sizeKey]: modalSizes.includes(size) ? undefined : size }}
               {...transitionRest}
-              {...pick(rest, Object.keys(modalDialogPropTypes))}
+              {...pick(rest, [
+                'size',
+                'className',
+                'classPrefix',
+                'dialogClassName',
+                'style',
+                'dialogStyle',
+                'children'
+              ])}
               ref={mergeRefs(dialogRef, transitionRef)}
               classPrefix={classPrefix}
               className={merge(classes, transitionClassName, prefix({ shake }))}
               dialogClassName={dialogClassName}
               dialogStyle={dialogStyle}
-            >
-              {children}
-            </Dialog>
+            />
           );
         }}
       </BaseModal>
     </ModalContext.Provider>
   );
-}) as unknown) as ModalComponent;
-
-Modal.Body = ModalBody;
-Modal.Header = ModalHeader;
-Modal.Title = ModalTitle;
-Modal.Footer = ModalFooter;
-Modal.Dialog = ModalDialog;
+}, Subcomponents);
 
 Modal.displayName = 'Modal';
-Modal.defaultProps = defaultProps;
-Modal.propTypes = {
-  ...modalPropTypes,
-  animation: PropTypes.any,
-  animationTimeout: PropTypes.number,
-  classPrefix: PropTypes.string,
-  dialogClassName: PropTypes.string,
-  size: PropTypes.oneOf(SIZE),
-  dialogStyle: PropTypes.object,
-  dialogAs: PropTypes.elementType,
-  full: PropTypes.bool,
-  overflow: PropTypes.bool,
-  drawer: PropTypes.bool
-};
 
 export default Modal;

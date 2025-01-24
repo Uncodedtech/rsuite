@@ -1,6 +1,6 @@
-import fi from 'date-fns/locale/fi';
+import { fi } from 'date-fns/locale/fi';
 
-const Calendar = {
+const DateTimeFormats = {
   sunday: 'Su',
   monday: 'Ma',
   tuesday: 'Ti',
@@ -11,6 +11,7 @@ const Calendar = {
   ok: 'OK',
   today: 'Tänään',
   yesterday: 'Eilen',
+  now: 'Nyt',
   hours: 'Tunnit',
   minutes: 'Minuuttia',
   seconds: 'Sekunttia',
@@ -20,13 +21,31 @@ const Calendar = {
    **/
   formattedMonthPattern: 'MMM yyyy',
   formattedDayPattern: 'dd MMM yyyy',
-  dateLocale: fi
+  shortDateFormat: 'dd.MM.yyyy',
+  shortTimeFormat: 'HH.mm',
+  dateLocale: fi as any
+};
+
+const Combobox = {
+  noResultsText: 'Ei tuloksia',
+  placeholder: 'Valitse',
+  searchPlaceholder: 'Etsi',
+  checkAll: 'Kaikki'
+};
+
+const CreatableComboBox = {
+  ...Combobox,
+  newItem: 'Uusi nimike',
+  createOption: 'Luo vaihtoehto "{0}"'
 };
 
 export default {
+  code: 'fi-FI',
   common: {
     loading: 'Hetkinen...',
-    emptyMessage: 'Dataa ei löytynyt'
+    emptyMessage: 'Dataa ei löytynyt',
+    remove: 'Poista',
+    clear: 'Asia selvä'
   },
   Plaintext: {
     unfilled: 'täyttämättömät',
@@ -43,35 +62,24 @@ export default {
     total: 'yhteensä: {0}',
     skip: 'Mene{0}'
   },
-  Calendar,
-  DatePicker: {
-    ...Calendar
-  },
+  DateTimeFormats,
+  Calendar: DateTimeFormats,
+  DatePicker: DateTimeFormats,
   DateRangePicker: {
-    ...Calendar,
+    ...DateTimeFormats,
     last7Days: 'Viimeiset 7 päivää'
   },
-  Picker: {
-    noResultsText: 'Ei tuloksia',
-    placeholder: 'Valitse',
-    searchPlaceholder: 'Etsi',
-    checkAll: 'Kaikki',
-    loading: 'Hetkinen...'
-  },
-  Input: {
-    emptyPlaintext: 'täyttämättömät'
-  },
-  InputPicker: {
-    newItem: 'Uusi nimike',
-    createOption: 'Luo vaihtoehto "{0}"'
-  },
+  Combobox,
+  InputPicker: CreatableComboBox,
+  TagPicker: CreatableComboBox,
   Uploader: {
     inited: 'Ensimmäinen',
     progress: 'Lataa',
     error: 'Virhe',
     complete: 'Valmis',
     emptyFile: 'Tyhjä',
-    upload: 'Lataa'
+    upload: 'Lataa',
+    removeFile: 'Poista tiedosto'
   },
   CloseButton: {
     closeLabel: 'Sammuttaa'

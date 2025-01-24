@@ -1,4 +1,9 @@
 import React from 'react';
+import DefaultPage from '@/components/Page';
+import ImportGuide from '@/components/ImportGuide';
+import FakeBrowser from '@/components/FakeBrowser';
+import Icon from '@rsuite/icons/Icon';
+import Simulation from '@/components/Simulation';
 import {
   Container,
   Header,
@@ -10,32 +15,48 @@ import {
   Sidenav,
   Nav,
   IconButton,
-  Toggle,
-  Dropdown,
-  FlexboxGrid,
   Panel,
   Form,
-  ButtonToolbar,
-  Navbar
+  Navbar,
+  Stack,
+  VStack,
+  HStack,
+  Text,
+  Input,
+  Avatar,
+  InputGroup,
+  Breadcrumb
 } from 'rsuite';
+import { FaGithub, FaRegEye, FaRegEyeSlash, FaReact } from 'react-icons/fa';
+import {
+  MdDashboard,
+  MdGroup,
+  MdSettings,
+  MdOutlineStackedBarChart,
+  MdKeyboardArrowLeft,
+  MdOutlineKeyboardArrowRight
+} from 'react-icons/md';
 
-import DefaultPage from '@/components/Page';
-import Logo from '@/components/Logo';
-import Home from '@rsuite/icons/legacy/Home';
-import Cog from '@rsuite/icons/legacy/Cog';
-import AngleLeft from '@rsuite/icons/legacy/AngleLeft';
-import AngleRight from '@rsuite/icons/legacy/AngleRight';
-import LogoAnalytics from '@rsuite/icons/legacy/LogoAnalytics';
-import Dashboard from '@rsuite/icons/Dashboard';
-import Group from '@rsuite/icons/legacy/Group';
-import Magic from '@rsuite/icons/legacy/Magic';
-import GearCircle from '@rsuite/icons/legacy/GearCircle';
+import files from './files';
+
+const inDocsComponents = {
+  'import-guide': () => (
+    <ImportGuide components={['Container', 'Header', 'Content', 'Footer', 'Sidebar']} />
+  ),
+  'example-horizontal': () => <Simulation example="horizontal" componentName="container" />,
+  'example-vertical': () => <Simulation example="vertical" componentName="container" />,
+  'example-center': () => <Simulation example="center" componentName="container" />,
+  'example-right-sidebar': () => <Simulation example="right-sidebar" componentName="container" />
+};
 
 export default function Page() {
   return (
     <DefaultPage
+      inDocsComponents={inDocsComponents}
+      sandboxFiles={files}
       dependencies={{
-        Logo,
+        FakeBrowser,
+        Avatar,
         Divider,
         IconButton,
         Button,
@@ -46,22 +67,27 @@ export default function Page() {
         Content,
         Sidenav,
         Nav,
-        Toggle,
-        Dropdown,
-        FlexboxGrid,
         Panel,
         Form,
-        ButtonToolbar,
         Navbar,
-        Home,
-        Cog,
-        AngleLeft,
-        AngleRight,
-        LogoAnalytics,
-        Dashboard,
-        Group,
-        Magic,
-        GearCircle
+        Icon,
+        Stack,
+        VStack,
+        HStack,
+        InputGroup,
+        Input,
+        Text,
+        Breadcrumb,
+        FaReact,
+        FaGithub,
+        FaRegEye,
+        FaRegEyeSlash,
+        MdDashboard,
+        MdGroup,
+        MdSettings,
+        MdOutlineStackedBarChart,
+        MdKeyboardArrowLeft,
+        MdOutlineKeyboardArrowRight
       }}
     />
   );

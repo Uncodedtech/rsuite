@@ -1,47 +1,47 @@
 <!--start-code-->
 
 ```js
-/**
- * import data from
- * https://github.com/rsuite/rsuite/blob/master/docs/public/data/city-simplified.json
- */
+import { CheckTreePicker, VStack, HStack } from 'rsuite';
+import { mockTreeData } from './mock';
 
-const Label = props => {
-  return <label style={{ width: 120, display: 'inline-block', marginTop: 10 }} {...props} />;
-};
+const data = mockTreeData({
+  limits: [3, 3, 4],
+  labels: (layer, value, faker) => {
+    const methodName = ['jobArea', 'jobType', 'firstName'];
+    return faker.person[methodName[layer]]();
+  }
+});
 
-const instance = (
-  <div>
-    <Label>Disabled: </Label>
-    <CheckTreePicker disabled data={data} defaultValue={[24]} style={{ width: 220 }} />
-    <br />
-    <Label>Disabled option: </Label>
-    <CheckTreePicker
+const App = () => (
+  <VStack spacing={16}>
+    <Select label="Disabled" disabled data={data} defaultValue={['1-2']} />
+    <Select
+      label="Disabled option"
       defaultExpandAll
       data={data}
-      disabledItemValues={[1, 3, 36]}
-      defaultValue={[24]}
-      style={{ width: 220 }}
+      disabledItemValues={['1-1', '1-1-2']}
+      defaultValue={['1-2']}
     />
-    <br />
-    <Label>Uncheckable: </Label>
-    <CheckTreePicker
+    <Select
+      label="Uncheckable"
       defaultExpandAll
       data={data}
-      uncheckableItemValues={[1, 3, 36]}
-      defaultValue={[24]}
-      style={{ width: 220 }}
+      uncheckableItemValues={['1-1', '1-1-2']}
+      defaultValue={['1-2']}
     />
-
-    <hr />
-    <Label>Read only: </Label>
-    <CheckTreePicker readOnly data={data} defaultValue={[24]} style={{ width: 220 }} />
-    <hr />
-    <Label>Plaintext: </Label>
-    <CheckTreePicker plaintext data={data} defaultValue={[24]} style={{ width: 220 }} />
-  </div>
+    <Select label="Read only" readOnly data={data} defaultValue={['1-2']} />
+    <Select label="Plaintext" plaintext data={data} defaultValue={['1-2']} />
+  </VStack>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+const Select = ({ label, children, ...rest }) => (
+  <HStack>
+    <label style={{ width: 120 }}>{label}:</label>
+    <CheckTreePicker {...rest} style={{ width: 180 }} />
+  </HStack>
+);
 ```
 
 <!--end-code-->

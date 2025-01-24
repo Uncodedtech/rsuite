@@ -1,5 +1,6 @@
 @import '../../styles/common';
-@import '../../Ripple/styles/mixins';
+@import '../../internals/Ripple/styles/mixins';
+@import '../../Dropdown/styles/index';
 
 //
 // Navs
@@ -9,10 +10,12 @@
 // --------------------------------------------------
 .rs-nav {
   position: relative;
+  outline: 0;
 
   // Rest dropdown height
   .rs-dropdown > .rs-dropdown-toggle {
     height: 36px;
+    vertical-align: bottom;
   }
 
   // Ripple
@@ -29,6 +32,7 @@
   padding: 8px 12px;
   cursor: pointer;
   color: var(--rs-navs-text);
+  background: transparent;
   transition: @nav-item-transition;
   .ellipsis-basic();
   .safari-border-radius-overflow-hidden();
@@ -36,19 +40,32 @@
   outline: none;
   .reset-link-text-decoration(none);
 
+  .high-contrast-mode({
+    transition: none;
+  });
+
   &:hover,
-  &:focus {
+  &:focus,
+  &&-focus {
     color: var(--rs-navs-text-hover);
+
+    .high-contrast-mode({
+      text-decoration: underline;
+    });
   }
 
-  &:focus {
-    .focus-ring();
+  &:focus-visible {
+    .focus-ring(slim);
 
-    z-index: 2; // :focus has larger z-index than -active
+    z-index: 2;
   }
 
   &:active {
     color: var(--rs-navs-text-active);
+
+    .high-contrast-mode({
+      text-decoration: underline;
+    });
   }
 
   &.rs-nav-item-disabled {
@@ -61,16 +78,33 @@
     position: relative;
     color: var(--rs-navs-selected);
     z-index: 1;
+
+    .high-contrast-mode({
+      text-decoration: underline;
+    });
   }
 
-  > .rs-icon {
+  &-icon {
     margin-right: 6px;
+  }
+
+  &-caret {
+    font-size: 16px;
+    vertical-align: text-bottom;
+    margin-left: 6px;
   }
 }
 
 // Orientations
 .rs-nav-horizontal {
   white-space: nowrap;
+
+  > .rs-nav-item {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    vertical-align: top;
+  }
 
   // Waterline
   .rs-nav-bar {
@@ -86,19 +120,12 @@
   }
 }
 
-.rs-nav-item,
-.rs-dropdown {
-  .rs-nav-horizontal > & {
-    display: inline-block;
-    vertical-align: top;
-  }
-
-  .rs-nav-vertical > & {
-    display: block;
-  }
-}
-
 .rs-nav-vertical {
+  > .rs-nav-item {
+    display: flex;
+    align-items: center;
+  }
+
   > .rs-dropdown {
     width: 100%;
 
@@ -131,8 +158,7 @@
   .rs-nav-item {
     border-radius: 6px;
 
-    &:hover,
-    &:focus {
+    &:hover {
       background: var(--rs-navs-bg-hover);
     }
   }
@@ -272,6 +298,41 @@
         right: auto;
         left: 0;
       }
+    }
+  }
+}
+
+// Pills Nav
+.rs-nav-pills {
+  display: inline-flex;
+  background-color: var(--rs-navs-pills-bg);
+  border-radius: 6px;
+  padding: 4px;
+  width: max-content;
+
+  .rs-nav-item {
+    border-radius: 6px;
+    position: relative;
+    padding: 4px 12px;
+    color: var(--rs-navs-pills-item-color);
+
+    &-active {
+      background-color: var(--rs-navs-pills-item-active-bg);
+      color: var(--rs-navs-pills-item-active-color);
+      box-shadow: var(--rs-navs-pills-item-shadow);
+    }
+
+    &-disabled {
+      color: var(--rs-navs-pills-item-disabled-color);
+    }
+  }
+
+  &.rs-nav-vertical {
+    flex-direction: column;
+
+    .rs-nav-item {
+      padding: 6px 12px;
+      justify-content: center;
     }
   }
 }

@@ -4,7 +4,7 @@
 
 ## 获取组件
 
-<!--{include:(components/flexbox-grid/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## 演示
 
@@ -24,22 +24,22 @@
 
  <!--{include:`order.md`}-->
 
-### 响应式
+## 响应式
 
 与 `<Col>` 组件结合可以实现响应式。
 
- <!--{include:`responsive.md`}-->
+<!--{include:<example-responsive>}-->
 
 ## Props
 
 ### `<FlexboxGrid>`
 
-| 属性名称    | 类型`(默认值)`                                                               | 描述                 |
-| ----------- | ---------------------------------------------------------------------------- | -------------------- |
-| align       | enum: 'top' , 'middle' , 'bottom' `('top')`                                  | 对齐方式             |
-| as          | ElementType `('div')`                                                        | 为组件自定义元素类型 |
-| classPrefix | string `('flex-box-grid')`                                                   | 组件 CSS 类的前缀    |
-| justify     | enum : 'start', 'end', 'center', 'space-around', 'space-between' `('start')` | 水平排列方式         |
+| 属性名称    | 类型`(默认值)`                                                                                | 描述                 |
+| ----------- | --------------------------------------------------------------------------------------------- | -------------------- |
+| align       | 'top' &#124; 'middle' &#124; 'bottom' `('top')`                                               | 对齐方式             |
+| as          | ElementType `('div')`                                                                         | 为组件自定义元素类型 |
+| classPrefix | string `('flex-box-grid')`                                                                    | 组件 CSS 类的前缀    |
+| justify     | 'start' &#124; 'end' &#124; 'center' &#124; 'space-around' &#124; 'space-between' `('start')` | 水平排列方式         |
 
 ### `<FlexboxGrid.Item>`
 

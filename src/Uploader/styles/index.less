@@ -12,20 +12,15 @@
       position: absolute !important;
       clip: rect(1px 1px 1px 1px);
     }
-
-    &-disabled {
-      opacity: 0.3;
-      //cursor: not-allowed;
-
-      .rs-uploader-trigger-btn {
-        cursor: not-allowed !important;
-      }
-    }
   }
 
   &-file-item-disabled {
     opacity: 0.3;
     cursor: not-allowed;
+
+    &:hover {
+      background-color: transparent !important;
+    }
 
     .rs-uploader-picture & .rs-uploader-file-item-status {
       cursor: not-allowed;
@@ -41,6 +36,15 @@
     margin-left: 10px;
     color: var(--rs-text-primary);
     font-size: 12px;
+  }
+}
+
+.rs-uploader-file-item {
+  &:hover &-title {
+    .high-contrast-mode({
+      color: var(--rs-uploader-item-hover-text);
+      text-decoration: underline;
+    });
   }
 }
 
@@ -109,8 +113,7 @@
 
     &-btn-remove {
       position: absolute;
-      font-size: 12px;
-      // (36px -  font-size)/2
+      font-size: 14px;
       top: 12px;
       right: @padding-x;
       color: var(--rs-text-secondary);
@@ -203,6 +206,11 @@
 
       > img {
         .img-cover();
+      }
+
+      .rs-uploader-file-item-icon {
+        font-size: @uploader-file-item-icon-font-size;
+        margin: @uploader-file-item-icon-margin-plus;
       }
     }
 
@@ -300,13 +308,6 @@
   }
 }
 
-.rs-uploader-text,
-.rs-uploader-picture-text {
-  .rs-uploader-trigger-btn {
-    .rs-btn();
-  }
-}
-
 .rs-uploader-picture-text {
   .rs-uploader-file-item {
     position: relative;
@@ -341,6 +342,11 @@
 
       > img {
         .img-cover();
+      }
+
+      .rs-uploader-file-item-icon {
+        font-size: @uploader-file-item-icon-font-size;
+        margin: @uploader-file-item-icon-margin;
       }
     }
 
@@ -441,7 +447,8 @@
     border: 1px dashed var(--rs-uploader-dnd-border);
   }
 
-  .rs-uploader-trigger.rs-uploader-trigger-customize:not(.rs-uploader-trigger-disabled) .rs-uploader-trigger-btn:hover,
+  .rs-uploader-trigger.rs-uploader-trigger-customize:not(.rs-uploader-trigger-disabled)
+    .rs-uploader-trigger-btn:hover,
   .rs-uploader-trigger-drag-over .rs-uploader-trigger-btn.rs-uploader-trigger-customize {
     border-color: var(--rs-uploader-dnd-hover-border);
   }

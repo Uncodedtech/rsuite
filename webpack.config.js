@@ -8,7 +8,9 @@ const __DEV__ = process.env.NODE_ENV === 'development';
 const filename = __DEV__ ? '[name].js' : '[name].min.js';
 
 const plugins = [
-  new LodashModuleReplacementPlugin(),
+  new LodashModuleReplacementPlugin({
+    currying: true
+  }),
   new webpack.SourceMapDevToolPlugin({
     filename: `${filename}.map`
   })
@@ -23,7 +25,7 @@ module.exports = {
     rsuite: path.join(__dirname, 'src')
   },
   output: {
-    path: path.join(__dirname, 'dist'),
+    path: path.join(__dirname, 'lib/dist'),
     filename,
     library: 'rsuite',
     libraryTarget: 'umd'

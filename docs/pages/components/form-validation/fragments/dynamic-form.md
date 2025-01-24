@@ -1,12 +1,34 @@
 <!--start-code-->
 
 ```js
-/**
- import { Schema, Form, FlexboxGrid, ButtonGroup, IconButton } from 'rsuite';
- import PlusIcon from '@rsuite/icons/Plus';
- import MinusIcon from '@rsuite/icons/Minus';
+import {
+  Form,
+  Button,
+  ButtonGroup,
+  ButtonToolbar,
+  Schema,
+  InputNumber,
+  Panel,
+  Input,
+  FlexboxGrid,
+  IconButton
+} from 'rsuite';
+import PlusIcon from '@rsuite/icons/Plus';
+import MinusIcon from '@rsuite/icons/Minus';
+import JSONTree from 'react-json-tree';
 
- */
+const JSONView = ({ formValue, formError }) => (
+  <div style={{ marginBottom: 10 }}>
+    <Panel className="json-tree-wrapper" header={<p>formValue</p>}>
+      <JSONTree data={formValue} />
+    </Panel>
+
+    <Panel className="json-tree-wrapper" header={<p>formError</p>}>
+      <JSONTree data={formError} />
+    </Panel>
+  </div>
+);
+
 const { ArrayType, StringType, NumberType, ObjectType } = Schema.Types;
 const model = Schema.Model({
   orderId: StringType().minLength(6, 'Minimum 6 characters required').isRequired('Required.'),
@@ -105,7 +127,7 @@ const ProductInputControl = ({ value = [], onChange, fieldError }) => {
 };
 
 const App = () => {
-  const formRef = React.useRef();
+  const form = React.useRef();
   const [formError, setFormError] = React.useState({});
   const [formValue, setFormValue] = React.useState({
     orderId: '',
@@ -116,8 +138,8 @@ const App = () => {
     <FlexboxGrid>
       <FlexboxGrid.Item colspan={12}>
         <Form
-          ref={formRef}
-          checkTrigger="blur"
+          ref={form}
+          checkTrigger="change"
           onChange={setFormValue}
           onCheck={setFormError}
           formValue={formValue}
@@ -134,14 +156,23 @@ const App = () => {
           />
 
           <hr />
-          <Button
-            appearance="primary"
-            onClick={() => {
-              formRef.current.check();
-            }}
-          >
-            Submit
-          </Button>
+          <ButtonToolbar>
+            <Button
+              appearance="primary"
+              onClick={() => {
+                form.current.check();
+              }}
+            >
+              Submit
+            </Button>
+            <Button
+              onClick={() => {
+                setFormError({});
+              }}
+            >
+              Clear Errors
+            </Button>
+          </ButtonToolbar>
         </Form>
       </FlexboxGrid.Item>
 
@@ -152,7 +183,7 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

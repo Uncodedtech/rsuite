@@ -1,6 +1,5 @@
 /// <reference types="next" />
-/// <reference types="next/types/global" />
+/// <reference types="next/image-types/global" />
 
-declare const __DEV__: boolean;
-declare const __VERSION__: string;
-declare const __RSUITE_CLASSNAME_PREFIX__: string;
+// NOTE: This file should not be edited
+// see https://nextjs.org/docs/pages/building-your-application/configuring/typescript for more information.

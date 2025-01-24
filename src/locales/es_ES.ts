@@ -1,6 +1,6 @@
-import es from 'date-fns/locale/es';
+import { es } from 'date-fns/locale/es';
 
-const Calendar = {
+const DateTimeFormats = {
   sunday: 'Do',
   monday: 'Lu',
   tuesday: 'Ma',
@@ -11,6 +11,7 @@ const Calendar = {
   ok: 'Aceptar',
   today: 'Hoy',
   yesterday: 'Ayer',
+  now: 'Ahora',
   hours: 'Horas',
   minutes: 'Minutos',
   seconds: 'Segundos',
@@ -20,13 +21,31 @@ const Calendar = {
    **/
   formattedMonthPattern: 'MMM yyyy',
   formattedDayPattern: 'dd MMM yyyy',
-  dateLocale: es
+  shortDateFormat: 'dd/MM/yyyy',
+  shortTimeFormat: 'HH:mm',
+  dateLocale: es as any
+};
+
+const Combobox = {
+  noResultsText: 'No se encontraron resultados',
+  placeholder: 'Seleccionar',
+  searchPlaceholder: 'Buscar',
+  checkAll: 'Todos'
+};
+
+const CreatableComboBox = {
+  ...Combobox,
+  newItem: 'Nuevo',
+  createOption: 'Crear opción "{0}"'
 };
 
 export default {
+  code: 'es-AR',
   common: {
     loading: 'Cargando...',
-    emptyMessage: 'Sin datos'
+    emptyMessage: 'Sin datos',
+    remove: 'Eliminar',
+    clear: 'Claro'
   },
   Plaintext: {
     unfilled: 'Sin llenar',
@@ -43,31 +62,24 @@ export default {
     total: 'Total: {0}',
     skip: 'Ir{0}'
   },
-  Calendar,
-  DatePicker: {
-    ...Calendar
-  },
+  DateTimeFormats,
+  Calendar: DateTimeFormats,
+  DatePicker: DateTimeFormats,
   DateRangePicker: {
-    ...Calendar,
+    ...DateTimeFormats,
     last7Days: 'Últimos 7 días'
   },
-  Picker: {
-    noResultsText: 'No se encontraron resultados',
-    placeholder: 'Seleccionar',
-    searchPlaceholder: 'Buscar',
-    checkAll: 'Todos'
-  },
-  InputPicker: {
-    newItem: 'Nuevo',
-    createOption: 'Crear opción "{0}"'
-  },
+  Combobox,
+  InputPicker: CreatableComboBox,
+  TagPicker: CreatableComboBox,
   Uploader: {
     inited: 'Inicial',
     progress: 'Subiendo',
     error: 'Error',
     complete: 'Terminado',
     emptyFile: 'Vacío',
-    upload: 'Subir'
+    upload: 'Subir',
+    removeFile: 'Eliminar archivo'
   },
   CloseButton: {
     closeLabel: 'Apagar'

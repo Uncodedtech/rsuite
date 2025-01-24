@@ -1,12 +1,12 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { on, transition } from 'dom-lib';
+import getTransitionEnd from 'dom-lib/getTransitionEnd';
+import on from 'dom-lib/on';
 import classNames from 'classnames';
 import isFunction from 'lodash/isFunction';
 import omit from 'lodash/omit';
-import { getDOMNode } from '../utils';
-import { AnimationEventProps } from '../@types/common';
-import { getAnimationEnd, animationPropTypes } from './utils';
+import { getDOMNode } from '@/internals/utils';
+import { AnimationEventProps } from '@/internals/types';
+import { getAnimationEnd } from './utils';
 
 export enum STATUS {
   UNMOUNTED = 0,
@@ -54,33 +54,45 @@ interface TransitionState {
   status?: number;
 }
 
-export const transitionPropTypes = {
-  ...animationPropTypes,
-  animation: PropTypes.bool,
-  children: PropTypes.oneOfType([PropTypes.node, PropTypes.func]),
-  className: PropTypes.string,
-  in: PropTypes.bool,
-  unmountOnExit: PropTypes.bool,
-  transitionAppear: PropTypes.bool,
-  timeout: PropTypes.number,
+type EventToken = { off: () => void };
 
-  exitedClassName: PropTypes.string,
-  exitingClassName: PropTypes.string,
-  enteredClassName: PropTypes.string,
-  enteringClassName: PropTypes.string
-};
+const transitionProps = [
+  'onEnter',
+  'onEntering',
+  'onEntered',
+  'onExit',
+  'onExiting',
+  'onExited',
+  'animation',
+  'children',
+  'className',
+  'in',
+  'unmountOnExit',
+  'transitionAppear',
+  'timeout',
+  'exitedClassName',
+  'exitingClassName',
+  'enteredClassName',
+  'enteringClassName'
+];
 
+/**
+ * A Transition component for animation.
+ * @see https://rsuitejs.com/components/animation/#transition
+ */
 class Transition extends React.Component<TransitionProps, TransitionState> {
-  static propTypes = transitionPropTypes;
   static displayName = 'Transition';
   static defaultProps = {
     timeout: 1000
   };
 
-  animationEventListener = null;
-  instanceElement = null;
-  nextCallback: any = null;
-  needsUpdate = null;
+  animationEventListener: EventToken | null = null;
+  instanceElement: HTMLElement | null = null;
+  nextCallback: {
+    (event?: React.AnimationEvent): void;
+    cancel: () => any;
+  } | null = null;
+  needsUpdate: boolean | null = null;
   childRef: React.RefObject<any>;
 
   constructor(props: TransitionProps) {
@@ -157,16 +169,19 @@ class Transition extends React.Component<TransitionProps, TransitionState> {
     this.instanceElement = null;
   }
 
-  onTransitionEnd(node: HTMLElement, handler: React.AnimationEventHandler) {
+  onTransitionEnd(node: HTMLElement, handler: (event?: React.AnimationEvent) => void) {
     this.setNextCallback(handler);
-
     this.animationEventListener?.off();
+
+    if (!this.nextCallback) {
+      return;
+    }
 
     if (node) {
       const { timeout, animation } = this.props;
       this.animationEventListener = on(
         node,
-        animation ? getAnimationEnd() : transition().end,
+        animation ? getAnimationEnd() : getTransitionEnd(),
         this.nextCallback
       );
       if (timeout !== null) {
@@ -177,10 +192,10 @@ class Transition extends React.Component<TransitionProps, TransitionState> {
     }
   }
 
-  setNextCallback(callback: React.AnimationEventHandler) {
+  setNextCallback(callback: (event?: React.AnimationEvent) => void) {
     let active = true;
 
-    this.nextCallback = (event?: React.AnimationEvent) => {
+    this.nextCallback = ((event?: React.AnimationEvent) => {
       if (!active) {
         return;
       }
@@ -197,15 +212,17 @@ class Transition extends React.Component<TransitionProps, TransitionState> {
       callback(event);
       active = false;
       this.nextCallback = null;
-    };
+    }) as any;
 
-    this.nextCallback.cancel = () => {
-      active = false;
-    };
+    if (this.nextCallback) {
+      this.nextCallback.cancel = () => {
+        active = false;
+      };
+    }
 
     return this.nextCallback;
   }
-  getChildElement() {
+  getChildElement(): HTMLElement {
     if (this.childRef.current) {
       return getDOMNode(this.childRef.current);
     }
@@ -258,9 +275,10 @@ class Transition extends React.Component<TransitionProps, TransitionState> {
     }
   }
 
-  safeSetState(nextState: TransitionState, callback: React.AnimationEventHandler) {
+  safeSetState(nextState: TransitionState, callback: (event?: React.AnimationEvent) => void) {
     if (this.instanceElement) {
-      this.setState(nextState, this.setNextCallback(callback));
+      const nextCallback = this.setNextCallback(callback);
+      this.setState(nextState, () => nextCallback?.());
     }
   }
 
@@ -281,7 +299,7 @@ class Transition extends React.Component<TransitionProps, TransitionState> {
       ...rest
     } = this.props;
 
-    const childProps: any = omit(rest, Object.keys(transitionPropTypes));
+    const childProps: any = omit(rest, transitionProps);
 
     let transitionClassName;
     if (status === STATUS.EXITED) {

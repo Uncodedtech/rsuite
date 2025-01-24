@@ -1,6 +1,12 @@
 <!--start-code-->
 
 ```js
+import { Drawer, ButtonToolbar, Button, IconButton, Placeholder } from 'rsuite';
+import AngleRightIcon from '@rsuite/icons/legacy/AngleRight';
+import AngleLeftIcon from '@rsuite/icons/legacy/AngleLeft';
+import AngleDownIcon from '@rsuite/icons/legacy/AngleDown';
+import AngleUpIcon from '@rsuite/icons/legacy/AngleUp';
+
 const App = () => {
   const [open, setOpen] = React.useState(false);
   const [placement, setPlacement] = React.useState();
@@ -12,16 +18,16 @@ const App = () => {
   return (
     <div>
       <ButtonToolbar>
-        <IconButton icon={<AngleLeft />} onClick={() => handleOpen('left')}>
+        <IconButton icon={<AngleRightIcon />} onClick={() => handleOpen('left')}>
           Left
         </IconButton>
-        <IconButton icon={<AngleRight />} onClick={() => handleOpen('right')}>
+        <IconButton icon={<AngleLeftIcon />} onClick={() => handleOpen('right')}>
           Right
         </IconButton>
-        <IconButton icon={<AngleUp />} onClick={() => handleOpen('top')}>
+        <IconButton icon={<AngleDownIcon />} onClick={() => handleOpen('top')}>
           Top
         </IconButton>
-        <IconButton icon={<AngleDown />} onClick={() => handleOpen('bottom')}>
+        <IconButton icon={<AngleUpIcon />} onClick={() => handleOpen('bottom')}>
           Bottom
         </IconButton>
       </ButtonToolbar>
@@ -37,14 +43,14 @@ const App = () => {
           </Drawer.Actions>
         </Drawer.Header>
         <Drawer.Body>
-          <Paragraph rows={8} />
+          <Placeholder.Paragraph rows={8} />
         </Drawer.Body>
       </Drawer>
     </div>
   );
 };
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

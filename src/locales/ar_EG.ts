@@ -1,6 +1,6 @@
-import arSA from 'date-fns/locale/ar-SA';
+import { arSA } from 'date-fns/locale/ar-SA';
 
-const Calendar = {
+const DateTimeFormats = {
   sunday: 'ح',
   monday: 'ن',
   tuesday: 'ث',
@@ -11,18 +11,37 @@ const Calendar = {
   ok: 'حسناً',
   today: 'اليوم',
   yesterday: 'أمس',
+  now: 'الآن',
   hours: 'ساعات',
   minutes: 'دقائق',
   seconds: 'ثواني',
   formattedMonthPattern: 'MMM, yyyy',
   formattedDayPattern: 'MMM dd, yyyy',
-  dateLocale: arSA
+  shortDateFormat: 'MM/dd/yyyy',
+  shortTimeFormat: 'HH:mm aa',
+  dateLocale: arSA as any
+};
+
+const Combobox = {
+  noResultsText: 'لا يوجد نتائج',
+  placeholder: 'إختيار',
+  searchPlaceholder: 'البحث',
+  checkAll: 'الجميع'
+};
+
+const CreatableComboBox = {
+  ...Combobox,
+  newItem: 'عنصر جديد',
+  createOption: 'إنشاء العنصر "{0}"'
 };
 
 export default {
+  code: 'ar-SA',
   common: {
     loading: 'جاري التحميل...',
-    emptyMessage: 'لا يوجد المزيد من البيانات'
+    emptyMessage: 'لا يوجد المزيد من البيانات',
+    remove: 'حذف',
+    clear: 'يزيل'
   },
   Plaintext: {
     unfilled: 'شاغرة',
@@ -40,31 +59,24 @@ export default {
     total: 'الإجمالي: {0}',
     skip: 'اذهب إل {0}'
   },
-  Calendar,
-  DatePicker: {
-    ...Calendar
-  },
+  DateTimeFormats,
+  Calendar: DateTimeFormats,
+  DatePicker: DateTimeFormats,
   DateRangePicker: {
-    ...Calendar,
+    ...DateTimeFormats,
     last7Days: 'أخر 7 أيام'
   },
-  Picker: {
-    noResultsText: 'لا يوجد نتائج',
-    placeholder: 'إختيار',
-    searchPlaceholder: 'البحث',
-    checkAll: 'الجميع'
-  },
-  InputPicker: {
-    newItem: 'عنصر جديد',
-    createOption: 'إنشاء العنصر "{0}"'
-  },
+  Combobox,
+  InputPicker: CreatableComboBox,
+  TagPicker: CreatableComboBox,
   Uploader: {
     inited: 'تم البدء',
     progress: 'جاري الرفع',
     error: 'خطأ',
     complete: 'تم الإنتهاء',
     emptyFile: 'فارغ',
-    upload: 'رفع'
+    upload: 'رفع',
+    removeFile: 'حذف الملف'
   },
   CloseButton: {
     closeLabel: 'اغلق'

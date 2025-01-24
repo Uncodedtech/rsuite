@@ -1,14 +1,15 @@
-import React, { useCallback, useState } from 'react';
-import PropTypes from 'prop-types';
-import { useClassNames, useTimeout, MESSAGE_STATUS_ICONS } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
-import CloseButton from '../CloseButton';
+import React, { useState } from 'react';
+import useDelayedClosure from '../toaster/hooks/useDelayedClosure';
+import CloseButton from '@/internals/CloseButton';
+import { MESSAGE_STATUS_ICONS } from '@/internals/constants/statusIcons';
+import { useClassNames, useIsMounted, useEventCallback } from '@/internals/hooks';
+import { forwardRef, mergeRefs } from '@/internals/utils';
+import { useCustom } from '../CustomProvider';
+import type { WithAsPropsWithoutChildren, StatusType, DisplayStateType } from '@/internals/types';
 
-export type MessageType = 'info' | 'success' | 'warning' | 'error';
+export interface NotificationProps extends WithAsPropsWithoutChildren {
+  children?: React.ReactNode | (() => React.ReactNode);
 
-type DisplayType = 'show' | 'hide' | 'hiding';
-
-export interface NotificationProps extends WithAsProps {
   /** Title of the message */
   header?: React.ReactNode;
 
@@ -16,6 +17,10 @@ export interface NotificationProps extends WithAsProps {
    * Delay automatic removal of messages.
    * When set to 0, the message is not automatically removed.
    * (Unit: milliseconds)
+   *
+   * @default 4500
+   * @deprecated Use `toaster.push(<Notification />, { duration: 4500 })` instead.
+   * @internal
    */
   duration?: number;
 
@@ -24,104 +29,96 @@ export interface NotificationProps extends WithAsProps {
    */
   closable?: boolean;
 
-  /** Type of message */
-  type?: MessageType;
+  /**
+   * Type of message
+   */
+  type?: StatusType;
 
-  /** Callback after the message is removed */
+  /**
+   * Callback after the message is removed
+   */
   onClose?: (event?: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
-const defaultProps: Partial<NotificationProps> = {
-  as: 'div',
-  classPrefix: 'notification',
-  duration: 4500
-};
+/**
+ * The `Notification` component is used to display global messages and notifications.
+ *
+ * @see https://rsuitejs.com/components/notification
+ */
+const Notification = forwardRef<'div', NotificationProps, any, 'children'>((props, ref) => {
+  const { propsWithDefaults } = useCustom('Notification', props);
+  const {
+    as: Component = 'div',
+    classPrefix = 'notification',
+    closable,
+    duration = 4500,
+    className,
+    type,
+    header,
+    children,
+    onClose,
+    ...rest
+  } = propsWithDefaults;
 
-const Notification: RsRefForwardingComponent<'div', NotificationProps> = React.forwardRef(
-  (props: NotificationProps, ref) => {
-    const {
-      as: Component,
-      classPrefix,
-      closable,
-      duration,
-      className,
-      type,
-      header,
-      children,
-      onClose,
-      ...rest
-    } = props;
-    const [display, setDisplay] = useState<DisplayType>('show');
+  const [display, setDisplay] = useState<DisplayStateType>('show');
+  const { withClassPrefix, merge, prefix } = useClassNames(classPrefix);
+  const isMounted = useIsMounted();
+  const targetRef = React.useRef<HTMLDivElement>(null);
 
-    const { withClassPrefix, merge, prefix } = useClassNames(classPrefix);
+  // Timed close message
+  const { clear } = useDelayedClosure({ targetRef, onClose, duration });
 
-    // Timed close message
-    const { clear } = useTimeout(onClose, duration, duration > 0);
+  // Click to trigger to close the message
+  const handleClose = useEventCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    setDisplay('hiding');
+    onClose?.(event);
+    clear();
 
-    // Click to trigger to close the message
-    const handleClose = useCallback(
-      (event: React.MouseEvent<HTMLButtonElement>) => {
-        setDisplay('hiding');
-        onClose?.(event);
-        clear();
-
-        setTimeout(() => {
-          setDisplay('hide');
-        }, 1000);
-      },
-      [onClose, clear]
-    );
-
-    const renderHeader = useCallback(() => {
-      if (!header) {
-        return null;
+    setTimeout(() => {
+      if (isMounted()) {
+        setDisplay('hide');
       }
+    }, 1000);
+  });
 
-      return (
-        <div className={prefix('title')}>
-          {type ? (
-            <div className={prefix`title-with-icon`}>
-              {MESSAGE_STATUS_ICONS[type]}
-              {header}
-            </div>
-          ) : (
-            <div className={prefix('title')}>{header}</div>
-          )}
-        </div>
-      );
-    }, [header, type, prefix]);
-
-    if (display === 'hide') {
+  const renderHeader = () => {
+    if (!header) {
       return null;
     }
 
-    const classes = merge(className, withClassPrefix(type, display, { closable }));
-
     return (
-      <Component role="alert" {...rest} ref={ref} className={classes}>
-        <div className={prefix`content`}>
-          {renderHeader()}
-          <div className={prefix('description')}>
-            {typeof children === 'function' ? children() : children}
+      <div className={prefix('title')}>
+        {type ? (
+          <div className={prefix`title-with-icon`}>
+            {MESSAGE_STATUS_ICONS[type]}
+            {header}
           </div>
-        </div>
-        {closable && <CloseButton onClick={handleClose} />}
-      </Component>
+        ) : (
+          <div className={prefix('title')}>{header}</div>
+        )}
+      </div>
     );
+  };
+
+  if (display === 'hide') {
+    return null;
   }
-);
+
+  const classes = merge(className, withClassPrefix(type, display, { closable }));
+
+  return (
+    <Component role="alert" {...rest} ref={mergeRefs(targetRef, ref)} className={classes}>
+      <div className={prefix`content`}>
+        {renderHeader()}
+        <div className={prefix('description')}>
+          {typeof children === 'function' ? children() : children}
+        </div>
+      </div>
+      {closable && <CloseButton onClick={handleClose} />}
+    </Component>
+  );
+});
 
 Notification.displayName = 'Notification';
-Notification.defaultProps = defaultProps;
-Notification.propTypes = {
-  as: PropTypes.elementType,
-  duration: PropTypes.number,
-  header: PropTypes.node,
-  closable: PropTypes.bool,
-  classPrefix: PropTypes.string,
-  className: PropTypes.string,
-  type: PropTypes.oneOf(['info', 'success', 'warning', 'error']),
-  onClose: PropTypes.func
-};
 
 export default Notification;

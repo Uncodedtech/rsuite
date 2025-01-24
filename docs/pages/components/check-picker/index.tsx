@@ -1,23 +1,43 @@
 import React from 'react';
-import { CheckPicker, Button, Checkbox, RadioGroup, Radio } from 'rsuite';
+import { CheckPicker, Button, Checkbox, RadioGroup, Radio, VStack, HStack } from 'rsuite';
 import DefaultPage from '@/components/Page';
-import PreventOverflowContainer from '@/components/PreventOverflowContainer';
-import useFetchData from '@/utils/useFetchData';
 import SpinnerIcon from '@rsuite/icons/legacy/Spinner';
+import ImportGuide from '@/components/ImportGuide';
+import { FaUserGroup, FaUser } from 'react-icons/fa6';
+
+import { importFakerString, mockUsers, mockUsersString, sandboxFakerVersion } from '@/utils/mock';
+
+const mockfile = {
+  name: 'mock.js',
+  content: [importFakerString, mockUsersString].join('\n')
+};
+
+const sandboxDependencies = {
+  ...sandboxFakerVersion
+};
+
+const inDocsComponents = {
+  'import-guide': () => <ImportGuide components={['CheckPicker']} />
+};
 
 export default function Page() {
-  const { response: data } = useFetchData('users-role');
   return (
     <DefaultPage
+      inDocsComponents={inDocsComponents}
+      sandboxDependencies={sandboxDependencies}
+      sandboxFiles={[mockfile]}
       dependencies={{
+        mockUsers,
+        VStack,
+        HStack,
         CheckPicker,
         Button,
         Checkbox,
         RadioGroup,
         Radio,
-        data,
         SpinnerIcon,
-        PreventOverflowContainer
+        FaUserGroup,
+        FaUser
       }}
     />
   );

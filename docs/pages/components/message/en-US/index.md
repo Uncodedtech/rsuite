@@ -4,11 +4,11 @@ Used to show important tips on a page.
 
 ## Import
 
-<!--{include:(components/message/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## Examples
 
-### Default
+### Basic
 
 <!--{include:`basic.md`}-->
 
@@ -16,9 +16,21 @@ Used to show important tips on a page.
 
 <!--{include:`types.md`}-->
 
-### Icons
+### With header and actions
+
+<!--{include:`header.md`}-->
+
+### With icon
 
 <!--{include:`icons.md`}-->
+
+### Bordered
+
+<!--{include:`bordered.md`}-->
+
+### Centered
+
+<!--{include:`centered.md`}-->
 
 ### Closable
 
@@ -30,22 +42,35 @@ Used to show important tips on a page.
 
 ### With toaster
 
+A message type that contains an Alert
+
 <!--{include:`with-toaster.md`}-->
 
-## Props & Methods
+## Accessibility
+
+### ARIA properties
+
+Message has a `role` of `alert`.
+
+### Keyboard interactions
+
+No keyboard interaction needed.
+
+## Props
 
 ### `<Message>`
 
-| Property    | Type `(Default)`                            | Description                                                                                                        |
-| ----------- | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| children    | ReactNode                                   | The description information for the message.                                                                       |
-| classPrefix | string `('message')`                        | The prefix of the component CSS class.                                                                             |
-| closable    | boolean                                     | Whether it is possible to close the message box                                                                    |
-| duration    | number `(2000)`                             | Delay automatic removal of messages. When set to 0, the message is not automatically removed. (Unit: milliseconds) |
-| full        | boolean                                     | Fill the container                                                                                                 |
-| header      | ReactNode                                   | The title of the message.                                                                                          |
-| onClose     | (event?: MouseEvent) => void                | Called after the message is closed                                                                                 |
-| showIcon    | boolean                                     | Whether to display an icon.                                                                                        |
-| type        | enum: 'info', 'success', 'warning', 'error' | The type of the message box.                                                                                       |
+| Property    | Type `(Default)`                                        | Description                                           |
+| ----------- | ------------------------------------------------------- | ----------------------------------------------------- |
+| bordered    | boolean                                                 | Show a border around the message box.<br/>![][5.53.0] |
+| centered    | boolean                                                 | Center the message vertically.<br/>![][5.53.0]        |
+| children    | ReactNode                                               | The description information for the message.          |
+| classPrefix | string `('message')`                                    | The prefix of the component CSS class.                |
+| closable    | boolean                                                 | Whether it is possible to close the message box       |
+| full        | boolean                                                 | Fill the container                                    |
+| header      | ReactNode                                               | The title of the message.                             |
+| onClose     | (event?: MouseEvent) => void                            | Called after the message is closed                    |
+| showIcon    | boolean                                                 | Whether to display an icon.                           |
+| type        | 'info' &#124; 'success' &#124; 'warning' &#124; 'error' | The type of the message box.                          |
 
-<!--{include:(components/notification/en-US/toaster.md)}-->
+[5.53.0]: https://img.shields.io/badge/>=-v5.53.0-blue

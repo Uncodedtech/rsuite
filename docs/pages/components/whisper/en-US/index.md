@@ -1,10 +1,10 @@
 # Whisper
 
-Bind an event to an element, and display a overlay when triggered.
+The `Whisper` component is used to display a floating element. It is usually used with the `Tooltip` and `Popover` components.
 
 ## Import
 
-<!--{include:(components/whisper/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## Examples
 
@@ -15,3 +15,4 @@ Bind an event to an element, and display a overlay when triggered.
 ## Props
 
 <!--{include:(components/whisper/en-US/props.md)}-->
+<!--{include:(_common/types/placement-all.md)}-->

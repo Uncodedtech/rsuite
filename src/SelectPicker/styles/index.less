@@ -1,5 +1,6 @@
 @import '../../styles/common';
-@import '../../Picker/styles/index';
+@import '../../styles/mixins/listbox';
+@import '../../internals/Picker/styles/index.less';
 
 // Select Picker
 // ----------------------
@@ -10,17 +11,20 @@
   .picker-menu-group-common(picker);
   .picker-menu-group-title(picker);
   .picker-menu-group-closed(picker);
+
+  .rs-picker-menu-group ~ [role='option'] > .rs-picker-select-menu-item {
+    padding-left: 26px;
+  }
 }
 
 // Menu item (the option)
 .rs-picker-select-menu-item {
-  .picker-select-item();
+  .listbox-option();
 
   &:hover,
   &:focus,
   &&-focus {
-    color: currentColor;
-    background-color: var(--rs-listbox-option-hover-bg);
+    .listbox-option-active();
   }
 
   &&-active {

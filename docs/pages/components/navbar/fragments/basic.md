@@ -1,27 +1,35 @@
 <!--start-code-->
 
 ```js
-const instance = (
+import { Navbar, Nav, Avatar, Text, Badge, IconButton } from 'rsuite';
+import { IoLogoReact, IoNotifications } from 'react-icons/io5';
+
+const App = () => (
   <Navbar>
-    <Navbar.Brand href="#">
-      RSUITE
-    </Navbar.Brand>
-    <Nav>
-      <Nav.Item icon={<Home />}>Home</Nav.Item>
-      <Nav.Item>News</Nav.Item>
-      <Nav.Item>Products</Nav.Item>
-      <Dropdown title="About">
-        <Dropdown.Item>Company</Dropdown.Item>
-        <Dropdown.Item>Team</Dropdown.Item>
-        <Dropdown.Item>Contact</Dropdown.Item>
-      </Dropdown>
-    </Nav>
-    <Nav pullRight>
-      <Nav.Item icon={<Cog />}>Settings</Nav.Item>
-    </Nav>
+    <Navbar.Content>
+      <Navbar.Brand href="#">
+        <IoLogoReact size={26} /> Brand
+      </Navbar.Brand>
+      <Nav>
+        <Nav.Item>Docs</Nav.Item>
+        <Nav.Item>Components</Nav.Item>
+        <Nav.Item>Tools</Nav.Item>
+      </Nav>
+    </Navbar.Content>
+
+    <Navbar.Content>
+      <Badge content={6} shape="circle">
+        <IconButton icon={<IoNotifications size={20} />} circle appearance="subtle" size="xs" />
+      </Badge>
+      <HStack>
+        <Avatar src="https://i.pravatar.cc/150?u=19" circle size="sm" />
+        <Text>John Doe</Text>
+      </HStack>
+    </Navbar.Content>
   </Navbar>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

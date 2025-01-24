@@ -1,13 +1,19 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { ReactChildren, useClassNames } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import { useClassNames } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import { forwardRef, ReactChildren } from '@/internals/utils';
+import type { WithAsProps } from '@/internals/types';
 
 export interface RowProps extends WithAsProps {
   gutter?: number;
 }
 
-const Row: RsRefForwardingComponent<'div', RowProps> = React.forwardRef((props: RowProps, ref) => {
+/**
+ * The `Row` component is used for layout and grids.
+ * @see https://rsuitejs.com/components/grid
+ */
+const Row = forwardRef<'div', RowProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('Row', props);
   const {
     as: Component = 'div',
     classPrefix = 'row',
@@ -16,7 +22,7 @@ const Row: RsRefForwardingComponent<'div', RowProps> = React.forwardRef((props: 
     children,
     style,
     ...rest
-  } = props;
+  } = propsWithDefaults;
 
   const { withClassPrefix, merge } = useClassNames(classPrefix);
   const classes = merge(className, withClassPrefix());
@@ -50,13 +56,5 @@ const Row: RsRefForwardingComponent<'div', RowProps> = React.forwardRef((props: 
 });
 
 Row.displayName = 'Row';
-Row.propTypes = {
-  className: PropTypes.string,
-  classPrefix: PropTypes.string,
-  gutter: PropTypes.number,
-  style: PropTypes.any,
-  as: PropTypes.elementType,
-  children: PropTypes.node
-};
 
 export default Row;

@@ -1,4 +1,4 @@
-import { canUseDOM } from 'dom-lib';
+import canUseDOM from 'dom-lib/canUseDOM';
 
 export default function scrollIntoView(arg?: boolean | ScrollIntoViewOptions): void {
   if (!canUseDOM) {
@@ -6,6 +6,10 @@ export default function scrollIntoView(arg?: boolean | ScrollIntoViewOptions): v
   }
 
   if (location.hash) {
-    document.querySelector(decodeURIComponent(location.hash))?.scrollIntoView(arg);
+    try {
+      document.querySelector(decodeURIComponent(location.hash))?.scrollIntoView(arg);
+    } catch (error) {
+      console.log(error);
+    }
   }
 }

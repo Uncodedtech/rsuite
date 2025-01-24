@@ -37,18 +37,24 @@ node_modules
 
 .scannerwork/
 
-# custom
+# eslint
 
-.vscode
-_build
-build
+.eslintcache
+
+# stylelint
+
+.stylelintcache
+
+# custom
 .DS_Store
-lib/
-es/
+
+# Editor
+.vscode
 .idea
-karma.sauce.conf.js
-dev-publish.sh
-dist
-docs/out/
-/types
-less
+
+# build
+lib/
+
+
+# generated
+docs/public/examples

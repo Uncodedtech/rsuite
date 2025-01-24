@@ -1,16 +1,37 @@
 <!--start-code-->
 
 ```js
-const { ArrayType, StringType, NumberType } = Schema.Types;
-const model = Schema.Model({
-  skills: ArrayType()
-    .minLength(2, 'Please select at least 2 types of Skills.')
-    .isRequired('This field is required.'),
-  status: ArrayType()
-    .minLength(2, 'Please select at least 2 types of Status.')
-    .isRequired('This field is required.'),
-  level: NumberType().min(5, 'This field must be greater than 5')
-});
+import {
+  Form,
+  Button,
+  CheckboxGroup,
+  RadioGroup,
+  Checkbox,
+  Radio,
+  Schema,
+  CheckPicker,
+  InputNumber,
+  Panel,
+  Slider,
+  DatePicker,
+  Message,
+  toaster,
+  FlexboxGrid,
+  Toggle
+} from 'rsuite';
+import JSONTree from 'react-json-tree';
+
+const JSONView = ({ formValue, formError }) => (
+  <div style={{ marginBottom: 10 }}>
+    <Panel className="json-tree-wrapper" header={<p>formValue</p>}>
+      <JSONTree data={formValue} />
+    </Panel>
+
+    <Panel className="json-tree-wrapper" header={<p>formError</p>}>
+      <JSONTree data={formError} />
+    </Panel>
+  </div>
+);
 
 const Field = React.forwardRef((props, ref) => {
   const { name, message, label, accepter, error, ...rest } = props;
@@ -23,6 +44,17 @@ const Field = React.forwardRef((props, ref) => {
   );
 });
 
+const { ArrayType, NumberType } = Schema.Types;
+const model = Schema.Model({
+  skills: ArrayType()
+    .minLength(2, 'Please select at least 2 types of Skills.')
+    .isRequired('This field is required.'),
+  status: ArrayType()
+    .minLength(2, 'Please select at least 2 types of Status.')
+    .isRequired('This field is required.'),
+  level: NumberType().min(5, 'This field must be greater than 5')
+});
+
 const App = () => {
   const formRef = React.useRef();
   const [formError, setFormError] = React.useState({});
@@ -33,7 +65,8 @@ const App = () => {
     status: ['open'],
     level: 1,
     level2: 1,
-    createDate: new Date()
+    createDate: new Date(),
+    toggle: true
   });
 
   const handleSubmit = () => {
@@ -111,7 +144,10 @@ const App = () => {
             name="createDate"
             label="Create Date"
             errorMessage={formError.createDate}
+            editable={false}
           />
+
+          <Field accepter={Toggle} name="toggle" label="Toggle" errorMessage={formError.toggle} />
 
           <Form.Group>
             <Button appearance="primary" onClick={handleSubmit}>
@@ -128,9 +164,7 @@ const App = () => {
   );
 };
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->
-
-> For example: `<Form.Control accepter={CheckboxGroup} />` , Form.Control renders a `<CheckboxGroup>` component and binds to the Schema.Model instance in the Form. The rich text editor in the following example, using [react-quill](https://github.com/zenoamaro/react-quill)

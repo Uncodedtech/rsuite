@@ -1,19 +1,16 @@
-import React, { useCallback, useRef, useState, useImperativeHandle } from 'react';
-import PropTypes from 'prop-types';
-import Ripple from '../Ripple';
-import { isIE11, useClassNames } from '../utils';
-import { UploaderLocale } from '../locales';
-export interface UploadTriggerProps {
-  as: React.ElementType | string;
+import React, { useRef, useState, useImperativeHandle } from 'react';
+import Button, { ButtonProps } from '../Button';
+import { useClassNames, useEventCallback } from '@/internals/hooks';
+import { forwardRef } from '@/internals/utils';
+import type { UploaderLocale } from '../locales';
+
+export interface UploadTriggerProps extends ButtonProps {
   name?: string;
   multiple?: boolean;
   disabled?: boolean;
   readOnly?: boolean;
   draggable?: boolean;
   accept?: string;
-  classPrefix?: string;
-  className?: string;
-  children?: React.ReactNode;
   locale?: UploaderLocale;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
   onDragEnter?: React.DragEventHandler<HTMLInputElement>;
@@ -26,23 +23,16 @@ export interface UploadTriggerInstance {
   clearInput: () => void;
 }
 
-const Button = props => <button {...props} type="button" />;
-
-const defaultProps: Partial<UploadTriggerProps> = {
-  as: Button,
-  classPrefix: 'uploader-trigger'
-};
-
-const UploadTrigger = React.forwardRef((props: UploadTriggerProps, ref) => {
+const UploadTrigger = forwardRef<typeof Button, UploadTriggerProps>((props, ref) => {
   const {
-    as: Component,
+    as: Component = Button,
     name,
     accept,
     multiple,
     disabled,
     readOnly,
     children,
-    classPrefix,
+    classPrefix = 'uploader-trigger',
     className,
     draggable,
     locale,
@@ -54,89 +44,61 @@ const UploadTrigger = React.forwardRef((props: UploadTriggerProps, ref) => {
     ...rest
   } = props;
 
-  const rootRef = useRef<HTMLDivElement>();
+  const rootRef = useRef<HTMLDivElement>(null);
   const [dragOver, setDragOver] = useState(false);
-  const inputRef = useRef<HTMLInputElement>();
+  const inputRef = useRef<HTMLInputElement>(null);
   const { merge, withClassPrefix, prefix } = useClassNames(classPrefix);
   const classes = merge(
     className,
     withClassPrefix({ disabled, customize: children, 'drag-over': dragOver })
   );
 
-  const handleClick = useCallback(() => {
+  const handleClick = useEventCallback(() => {
     inputRef.current?.click();
-  }, []);
+  });
 
-  const handleClearInput = useCallback(() => {
-    inputRef.current.value = '';
-  }, []);
+  const handleClearInput = useEventCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.value = '';
+    }
+  });
 
-  const handleDragEnter = useCallback(
-    event => {
-      if (draggable) {
-        event.preventDefault();
-        setDragOver(true);
-      }
-      onDragEnter?.(event);
-    },
-    [draggable, onDragEnter]
-  );
+  const handleDragEnter = useEventCallback(event => {
+    if (draggable) {
+      event.preventDefault();
+      setDragOver(true);
+    }
+    onDragEnter?.(event);
+  });
 
-  const handleDragLeave = useCallback(
-    event => {
-      if (draggable) {
-        event.preventDefault();
-        setDragOver(false);
-      }
-      onDragLeave?.(event);
-    },
-    [draggable, onDragLeave]
-  );
+  const handleDragLeave = useEventCallback(event => {
+    if (draggable) {
+      event.preventDefault();
+      setDragOver(false);
+    }
+    onDragLeave?.(event);
+  });
 
-  const handleDragOver = useCallback(
-    event => {
-      draggable && event.preventDefault();
-      onDragOver?.(event);
-    },
-    [draggable, onDragOver]
-  );
+  const handleDragOver = useEventCallback(event => {
+    draggable && event.preventDefault();
+    onDragOver?.(event);
+  });
 
-  const handleDrop = useCallback(
-    event => {
-      if (draggable) {
-        event.preventDefault();
-        setDragOver(false);
-        onChange?.(event);
-      }
-      onDrop?.(event);
-    },
-    [draggable, onChange, onDrop]
-  );
-
-  const handleChange = useCallback(
-    event => {
-      if (isIE11()) {
-        /**
-         * IE11 triggers onChange event of file input when element.value is assigned
-         * https://github.com/facebook/react/issues/8793
-         */
-        if (event.target?.files?.length > 0) {
-          onChange?.(event);
-        }
-        return;
-      }
-
+  const handleDrop = useEventCallback(event => {
+    if (draggable) {
+      event.preventDefault();
+      setDragOver(false);
       onChange?.(event);
-    },
-    [onChange]
-  );
+    }
+    onDrop?.(event);
+  });
 
   useImperativeHandle(ref, () => ({
     root: rootRef.current,
     clearInput: handleClearInput
   }));
 
-  const buttonProps: React.ButtonHTMLAttributes<HTMLButtonElement> = {
+  const buttonProps: ButtonProps = {
     ...rest,
     disabled,
     className: prefix('btn')
@@ -153,10 +115,7 @@ const UploadTrigger = React.forwardRef((props: UploadTriggerProps, ref) => {
   const trigger = children ? (
     React.cloneElement(React.Children.only(children as any), buttonProps)
   ) : (
-    <Component {...buttonProps}>
-      {locale?.upload}
-      <Ripple />
-    </Component>
+    <Component {...buttonProps}>{locale?.upload}</Component>
   );
 
   return (
@@ -169,7 +128,7 @@ const UploadTrigger = React.forwardRef((props: UploadTriggerProps, ref) => {
         readOnly={readOnly}
         accept={accept}
         ref={inputRef}
-        onChange={handleChange}
+        onChange={onChange}
       />
       {trigger}
     </div>
@@ -177,24 +136,5 @@ const UploadTrigger = React.forwardRef((props: UploadTriggerProps, ref) => {
 });
 
 UploadTrigger.displayName = 'UploadTrigger';
-UploadTrigger.defaultProps = defaultProps;
-UploadTrigger.propTypes = {
-  locale: PropTypes.any,
-  name: PropTypes.string,
-  multiple: PropTypes.bool,
-  disabled: PropTypes.bool,
-  readOnly: PropTypes.bool,
-  accept: PropTypes.string,
-  onChange: PropTypes.func,
-  classPrefix: PropTypes.string,
-  className: PropTypes.string,
-  children: PropTypes.node,
-  as: PropTypes.elementType,
-  draggable: PropTypes.bool,
-  onDragEnter: PropTypes.func,
-  onDragLeave: PropTypes.func,
-  onDragOver: PropTypes.func,
-  onDrop: PropTypes.func
-};
 
 export default UploadTrigger;

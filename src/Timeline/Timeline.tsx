@@ -1,9 +1,10 @@
 import React from 'react';
-import PropTypes from 'prop-types';
 import some from 'lodash/some';
 import TimelineItem from './TimelineItem';
-import { useClassNames, ReactChildren } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import { useClassNames } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import { forwardRef, ReactChildren } from '@/internals/utils';
+import type { WithAsProps } from '@/internals/types';
 
 export interface TimelineProps extends WithAsProps {
   /** The content of the component */
@@ -14,51 +15,66 @@ export interface TimelineProps extends WithAsProps {
 
   /** Timeline endless **/
   endless?: boolean;
+
+  /**
+   * Whether an item is active (with highlighted dot).
+   *
+   * @default
+   * The last item is marked active.
+   */
+  isItemActive?: (index: number, totalItemsCount: number) => boolean;
 }
 
-const defaultProps: Partial<TimelineProps> = {
-  as: 'ul', // TODO: Consider using <ol>?
-  classPrefix: 'timeline',
-  align: 'left'
+const ACTIVE_FIRST = (index: number) => index === 0;
+const ACTIVE_LAST = (index: number, totalItemsCount: number) => index === totalItemsCount - 1;
+
+const SubcomponentsAndStaticMethods = {
+  Item: TimelineItem,
+  ACTIVE_FIRST,
+  ACTIVE_LAST
 };
 
-interface TimelineComponent extends RsRefForwardingComponent<'div', TimelineProps> {
-  Item: typeof TimelineItem;
-}
+/**
+ * The `Timeline` component is used to display a list of items in chronological order.
+ *
+ * @see https://rsuitejs.com/components/timeline
+ */
+const Timeline = forwardRef<'div', TimelineProps, typeof SubcomponentsAndStaticMethods>(
+  (props, ref) => {
+    const { propsWithDefaults } = useCustom('Timeline', props);
+    const {
+      children,
+      as: Component = 'ul',
+      classPrefix = 'timeline',
+      className,
+      align = 'left',
+      endless,
+      isItemActive = ACTIVE_LAST,
+      ...rest
+    } = propsWithDefaults;
 
-const Timeline: TimelineComponent = (React.forwardRef((props: TimelineProps, ref) => {
-  const { children, as: Component, classPrefix, className, align, endless, ...rest } = props;
+    const { merge, withClassPrefix } = useClassNames(classPrefix);
+    const count = ReactChildren.count(children);
+    const withTime = some(React.Children.toArray(children), (item: any) => item?.props?.time);
 
-  const { merge, withClassPrefix } = useClassNames(classPrefix);
-  const count = React.Children.count(children);
-  const withTime = some(React.Children.toArray(children), (item: any) => item?.props?.time);
+    const classes = merge(
+      className,
+      withClassPrefix(`align-${align}`, { endless, 'with-time': withTime })
+    );
 
-  const classes = merge(
-    className,
-    withClassPrefix(`align-${align}`, { endless, 'with-time': withTime })
-  );
-
-  return (
-    <Component {...rest} ref={ref} className={classes}>
-      {ReactChildren.mapCloneElement(children, (_child: any, index: number) => ({
-        last: index + 1 === count,
-        align
-      }))}
-    </Component>
-  );
-}) as unknown) as TimelineComponent;
-
-Timeline.Item = TimelineItem;
+    return (
+      <Component {...rest} ref={ref} className={classes}>
+        {ReactChildren.mapCloneElement(children, (_child: any, index: number) => ({
+          last: index + 1 === count,
+          INTERNAL_active: isItemActive(index, count),
+          align
+        }))}
+      </Component>
+    );
+  },
+  SubcomponentsAndStaticMethods
+);
 
 Timeline.displayName = 'Timeline';
-Timeline.defaultProps = defaultProps;
-Timeline.propTypes = {
-  as: PropTypes.elementType,
-  className: PropTypes.string,
-  classPrefix: PropTypes.string,
-  children: PropTypes.node,
-  align: PropTypes.oneOf(['left', 'right', 'alternate']),
-  endless: PropTypes.bool
-};
 
 export default Timeline;

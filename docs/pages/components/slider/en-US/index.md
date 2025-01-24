@@ -2,16 +2,16 @@
 
 A Slider component for displaying current value
 
+## Import
+
+<!--{include:<import-guide>}-->
+
 - `<Slider>` Slide input controls.
 - `<RangeSlider>` Slide range input controls.
 
-## Import
-
-<!--{include:(components/slider/fragments/import.md)}-->
-
 ## Examples
 
-### Default
+### Basic
 
 <!--{include:`basic.md`}-->
 
@@ -34,6 +34,12 @@ A Slider component for displaying current value
 ### Show value (Controlled)
 
 <!--{include:`value.md`}-->
+
+### Constraint
+
+Limit starting value to be no greater than 25 and ending value to be no smaller than 35.
+
+<!--{include:`constraint.md`}-->
 
 ### Custom
 
@@ -85,7 +91,7 @@ WAI-ARIA: https://www.w3.org/TR/wai-aria-practices/#slider
 | Property          | Type `(Default)`                | Description                                                      |
 | ----------------- | ------------------------------- | ---------------------------------------------------------------- |
 | barClassName      | string                          | A css class to apply to the Bar DOM node                         |
-| defaultValue      | number                          | Default value                                                    |
+| defaultValue      | number                          | The default value (uncontrolled)                                 |
 | disabled          | boolean                         | The disabled of component                                        |
 | getAriaValueText  | (value: number) => string;      | Provide a user-friendly name for the current value of the slider |
 | graduated         | boolean                         | Show Ticks                                                       |
@@ -98,30 +104,33 @@ WAI-ARIA: https://www.w3.org/TR/wai-aria-practices/#slider
 | onChangeCommitted | (value: number, event) => void; | Callback function that is fired when the mouseup is triggered    |
 | progress          | boolean                         | Show sliding progress bar                                        |
 | renderMark        | (mark: number) => ReactNode     | Customize labels on the render ruler                             |
+| renderTooltip     | (value: number ) => ReactNode   | Customize the content of the rendered Tooltip                    |
 | step              | number`(1)`                     | Slide the value of one step                                      |
 | tooltip           | boolean`(true)`                 | Whether to show `Tooltip` when sliding                           |
-| value             | number                          | Value (Controlled)                                               |
+| value             | number                          | The current value (controlled)                                   |
 | vertical          | boolean                         | Vertical Slide                                                   |
 
 ### `<RangeSlider>`
 
-| Property          | Type `(Default)`                                       | Description                                                      |
-| ----------------- | ------------------------------------------------------ | ---------------------------------------------------------------- |
-| barClassName      | string                                                 | A css class to apply to the Bar DOM node                         |
-| defaultValue      | [number,number]                                        | Default value                                                    |
-| disabled          | boolean                                                | The disabled of component                                        |
-| getAriaValueText  | (value: number,eventKey:'start'&#124;'end') => string; | Provide a user-friendly name for the current value of the slider |
-| graduated         | boolean                                                | Show Ticks                                                       |
-| handleClassName   | string                                                 | A css class to apply to the Handle node                          |
-| handleStyle       | CSSProperties                                          | A css style to apply to the Handle node                          |
-| handleTitle       | ReactNode                                              | Customizing what is displayed inside a handle                    |
-| max               | number`(100)`                                          | Maximum sliding range                                            |
-| min               | number`(0)`                                            | Minimum value of sliding range                                   |
-| onChange          | (value: [number,number]) => void                       | Callback function that changes data                              |
-| onChangeCommitted | (value: [number,number], event) => void;               | Callback function that is fired when the mouseup is triggered    |
-| progress          | boolean                                                | Show sliding progress bar                                        |
-| renderMark        | (mark: number) => ReactNode                            | Customize labels on the render ruler                             |
-| step              | number`(1)`                                            | Slide the value of one step                                      |
-| tooltip           | boolean`(true)`                                        | Whether to show `Tooltip` when sliding                           |
-| value             | [number,number]                                        | Value (Controlled)                                               |
-| vertical          | boolean                                                | Vertical Slide                                                   |
+| Property          | Type `(Default)`                                       | Description                                                                                                          |
+| ----------------- | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------- |
+| barClassName      | string                                                 | A css class to apply to the Bar DOM node                                                                             |
+| constraint        | `(value: [number, number]) => boolean`                 | Validate next value before `onChange` is triggered. Prevent `onChange` being triggered if constraint returns `false` |
+| defaultValue      | [number,number]                                        | The default value (uncontrolled)                                                                                     |
+| disabled          | boolean                                                | The disabled of component                                                                                            |
+| getAriaValueText  | (value: number,eventKey:'start'&#124;'end') => string; | Provide a user-friendly name for the current value of the slider                                                     |
+| graduated         | boolean                                                | Show Ticks                                                                                                           |
+| handleClassName   | string                                                 | A css class to apply to the Handle node                                                                              |
+| handleStyle       | CSSProperties                                          | A css style to apply to the Handle node                                                                              |
+| handleTitle       | ReactNode                                              | Customizing what is displayed inside a handle                                                                        |
+| max               | number`(100)`                                          | Maximum sliding range                                                                                                |
+| min               | number`(0)`                                            | Minimum value of sliding range                                                                                       |
+| onChange          | (value: [number,number]) => void                       | Callback function that changes data                                                                                  |
+| onChangeCommitted | (value: [number,number], event) => void;               | Callback function that is fired when the mouseup is triggered                                                        |
+| progress          | boolean                                                | Show sliding progress bar                                                                                            |
+| renderMark        | (mark: number) => ReactNode                            | Customize labels on the render ruler                                                                                 |
+| renderTooltip     | (value: number ) => ReactNode                          | Customize the content of the rendered Tooltip                                                                        |
+| step              | number`(1)`                                            | Slide the value of one step                                                                                          |
+| tooltip           | boolean`(true)`                                        | Whether to show `Tooltip` when sliding                                                                               |
+| value             | [number,number]                                        | The current value (controlled)                                                                                       |
+| vertical          | boolean                                                | Vertical Slide                                                                                                       |

@@ -1,34 +1,40 @@
 <!--start-code-->
 
 ```js
-/**
- * import data from
- * https://github.com/rsuite/rsuite/blob/master/docs/public/data/city-simplified.json
- */
+import { TreePicker, VStack, HStack } from 'rsuite';
+import { mockTreeData } from './mock';
 
-const instance = (
-  <div>
-    <label>Disabled: </label>
-    <TreePicker disabled data={data} defaultValue={24} style={{ width: 246 }} />
-    <label style={{ marginLeft: 10 }}>Disabled option: </label>
-    <TreePicker
+const data = mockTreeData({
+  limits: [3, 3, 4],
+  labels: (layer, value, faker) => {
+    const methodName = ['jobArea', 'jobType', 'firstName'];
+    return faker.person[methodName[layer]]();
+  }
+});
+
+const App = () => (
+  <VStack spacing={16}>
+    <Select label="Disabled" disabled data={data} defaultValue={'1-1'} />
+    <Select
+      label="Disabled option"
       defaultExpandAll
       data={data}
-      defaultValue={24}
-      disabledItemValues={[2]}
-      style={{ width: 246 }}
+      defaultValue={'1-1'}
+      disabledItemValues={['1-1-1', '2']}
     />
-
-    <hr />
-    <label>Read only: </label>
-    <TreePicker readOnly data={data} defaultValue={24} style={{ width: 246 }} />
-
-    <hr />
-    <label>Plaintext: </label>
-    <TreePicker plaintext data={data} defaultValue={24} style={{ width: 246 }} />
-  </div>
+    <Select label="Read only" readOnly data={data} defaultValue={'1-1'} />
+    <Select label="Plaintext" plaintext data={data} defaultValue={'1-1'} />
+  </VStack>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+const Select = ({ label, children, ...rest }) => (
+  <HStack>
+    <label style={{ width: 120 }}>{label}:</label>
+    <TreePicker {...rest} style={{ width: 180 }} />
+  </HStack>
+);
 ```
 
 <!--end-code-->

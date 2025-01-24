@@ -3,7 +3,7 @@
  * Run all tests: `npm run tdd`
  * Run all styles tests: `M=styles npm run tdd`
  * Run a component test: `M=Button npm run tdd`
- * Run a test of a file: `src/Picker/test/PickerToggleSpec.js npm run tdd`
+ * Run a test of a file: `F=src/Picker/test/PickerToggleSpec.tsx npm run tdd`
  */
 
 /**
@@ -13,10 +13,12 @@ module.exports = config => {
   const { env } = process;
   const { M, F } = env;
 
-  let testFile = 'test/index.js';
+  // Weird pattern syntax but works
+  // @see https://github.com/karma-runner/karma/issues/1532#issuecomment-127128326
+  let testFile = 'src/**/*Spec.+(js|ts|tsx)';
 
   if (M) {
-    testFile = `src/${M}/test/*.js`;
+    testFile = `src/${M}/test/*Spec.+(js|ts|tsx)`;
   } else if (F) {
     testFile = F;
   }
@@ -34,14 +36,19 @@ module.exports = config => {
     /** How long will Karma wait for a message from a browser before disconnecting from it (in ms). */
     browserNoActivityTimeout: 210000,
     basePath: '',
-    files: [testFile],
-    frameworks: ['mocha', 'sinon-chai'],
+    files: ['test/setupTests.js', ...[testFile].map(pattern => ({ pattern, watched: false }))],
+    frameworks: ['mocha', 'chai-dom', 'sinon-chai', 'webpack'],
     colors: true,
     reporters: ['mocha', 'coverage'],
     logLevel: config.LOG_INFO,
     preprocessors: {
-      'test/*.js': ['webpack'],
-      'src/**/*.js': ['webpack']
+      'test/setupTests.js': ['webpack'],
+      'src/**/*Spec.+(js|ts|tsx)': ['webpack']
+    },
+    client: {
+      mocha: {
+        timeout: 10000 // default 2000
+      }
     },
     webpack: require('./webpack.karma.js'),
     webpackMiddleware: {

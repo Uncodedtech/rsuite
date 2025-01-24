@@ -1,18 +1,23 @@
 <!--start-code-->
 
 ```js
+import { Input, InputGroup, Whisper, Tooltip } from 'rsuite';
+import SearchIcon from '@rsuite/icons/Search';
+import InfoRoundIcon from '@rsuite/icons/InfoRound';
+import { FaRegUserCircle } from 'react-icons/fa';
+
 const styles = {
   width: 300,
   marginBottom: 10
 };
 
-const instance = (
-  <div>
+const App = () => (
+  <>
     <InputGroup inside style={styles}>
       <Input />
       <InputGroup.Addon>
         <Whisper placement="top" speaker={<Tooltip> Help information</Tooltip>}>
-          <Info />
+          <InfoRoundIcon />
         </Whisper>
       </InputGroup.Addon>
     </InputGroup>
@@ -20,14 +25,19 @@ const instance = (
     <InputGroup inside style={styles}>
       <Input />
       <InputGroup.Button>
-        <Search />
+        <SearchIcon />
       </InputGroup.Button>
+    </InputGroup>
+
+    <InputGroup inside style={styles}>
+      <InputGroup.Addon>https://</InputGroup.Addon>
+      <Input defaultValue="www." />
     </InputGroup>
 
     <InputGroup inside style={styles}>
       <Input />
       <InputGroup.Addon>
-        <Search />
+        <SearchIcon />
       </InputGroup.Addon>
     </InputGroup>
 
@@ -45,14 +55,14 @@ const instance = (
 
     <InputGroup inside style={styles}>
       <InputGroup.Addon>
-        <Avatar />
+        <FaRegUserCircle />
       </InputGroup.Addon>
       <Input />
     </InputGroup>
-  </div>
+  </>
 );
 
-ReactDOM.render(instance);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

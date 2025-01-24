@@ -1,11 +1,14 @@
 import * as helpers from 'dom-lib';
+import isElement from './isElement';
 export * from 'dom-lib';
 
-const DOMHelper = {
+/**
+ * a wrapper of dom-lib with some custom methods.
+ * @see https://rsuitejs.com/components/dom-helper/
+ */
+export const DOMHelper = {
   ...helpers,
-  isElement: (node: HTMLElement) => {
-    return node?.nodeType && typeof node?.nodeName === 'string';
-  }
+  isElement
 };
 
 export default DOMHelper;

@@ -1,4 +1,4 @@
-# Right-to-left
+# 从右到左 (RTL)
 
 为支持阿拉伯语和希伯来语等语言的习惯，对从右到左（RTL）读取的语言的 UI。
 
@@ -6,7 +6,7 @@
 
 ### 1.HTML 设置
 
-确保在 body 上设置了 dir 属性：
+确保在 html 上设置了 dir 属性：
 
 ```html
 <html dir="rtl"></html>
@@ -27,11 +27,11 @@ function RTL(props) {
 - 使用已编译的 RTL 版本的 CSS 文件
 
 ```less
-@import '~rsuite/dist/styles/rsuite-default-rtl.css'; //or ~rsuite/dist/styles/rsuite-dark-rtl.css
+@import '~rsuite/dist/rsuite-rtl.min.css';
 ```
 
 - 如果使用 Less 版本，则通过 [rtlcss](https://rtlcss.com/) 处理最终成 CSS
 
 ```less
-@import '~rsuite/lib/styles/themes/default/index.less'; // or ~rsuite/lib/styles/themes/dark/index.less
+@import '~rsuite/styles/index.less';
 ```

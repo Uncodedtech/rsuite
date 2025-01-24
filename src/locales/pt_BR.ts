@@ -1,6 +1,6 @@
-import ptBR from 'date-fns/locale/pt-BR';
+import { ptBR } from 'date-fns/locale/pt-BR';
 
-const Calendar = {
+const DateTimeFormats = {
   sunday: 'Do',
   monday: 'Se',
   tuesday: 'Te',
@@ -11,18 +11,37 @@ const Calendar = {
   ok: 'OK',
   today: 'Hoje',
   yesterday: 'Ontem',
+  now: 'Agora',
   hours: 'Horas',
   minutes: 'Minutos',
   seconds: 'Segundos',
   formattedMonthPattern: 'MMM, yyyy',
   formattedDayPattern: 'dd MMM, yyyy',
-  dateLocale: ptBR
+  shortDateFormat: 'dd/MM/yyyy',
+  shortTimeFormat: 'HH:mm',
+  dateLocale: ptBR as any
+};
+
+const Combobox = {
+  noResultsText: 'Nenhum resultado encontrado',
+  placeholder: 'Selecionar',
+  searchPlaceholder: 'Pesquisar',
+  checkAll: 'Todos'
+};
+
+const CreatableComboBox = {
+  ...Combobox,
+  newItem: 'Novo item',
+  createOption: 'Criar opção "{0}"'
 };
 
 export default {
+  code: 'pt-BR',
   common: {
     loading: 'Carregando...',
-    emptyMessage: 'Nenhum dado encontrado'
+    emptyMessage: 'Nenhum dado encontrado',
+    remove: 'Remover',
+    clear: 'Claro'
   },
   Plaintext: {
     unfilled: 'sin llenar',
@@ -39,31 +58,24 @@ export default {
     total: 'Total: {0}',
     skip: 'Ir{0}'
   },
-  Calendar,
-  DatePicker: {
-    ...Calendar
-  },
+  DateTimeFormats,
+  Calendar: DateTimeFormats,
+  DatePicker: DateTimeFormats,
   DateRangePicker: {
-    ...Calendar,
+    ...DateTimeFormats,
     last7Days: 'Últimos 7 dias'
   },
-  Picker: {
-    noResultsText: 'Nenhum resultado encontrado',
-    placeholder: 'Selecionar',
-    searchPlaceholder: 'Pesquisar',
-    checkAll: 'Todos'
-  },
-  InputPicker: {
-    newItem: 'Novo item',
-    createOption: 'Criar opção "{0}"'
-  },
+  Combobox,
+  InputPicker: CreatableComboBox,
+  TagPicker: CreatableComboBox,
   Uploader: {
     inited: 'Inicializado',
     progress: 'Em progresso',
     error: 'Erro',
     complete: 'Finalizado',
     emptyFile: 'Em branco',
-    upload: 'Upload'
+    upload: 'Upload',
+    removeFile: 'Remover arquivo'
   },
   CloseButton: {
     closeLabel: 'Apagar'

@@ -19,30 +19,25 @@ import {
   DatePicker,
   Input,
   Message,
-  Rate,
   Uploader,
   toaster,
   FlexboxGrid,
-  IconButton
+  IconButton,
+  Toggle
 } from 'rsuite';
 
 import PlusIcon from '@rsuite/icons/Plus';
 import MinusIcon from '@rsuite/icons/Minus';
+import files from './files';
+import { JSONTree } from 'react-json-tree';
 
-const JSONTree = loadable(() => import('react-json-tree'));
-const MaskedInput = loadable(() => import('react-text-mask'));
+const Select = loadable(() => import('react-select'));
 
-const JSONView = ({ formValue, formError }: any) => (
-  <div style={{ marginBottom: 10 }}>
-    <Panel className="json-tree-wrapper" header={<p>formValue</p>}>
-      <JSONTree data={formValue} />
-    </Panel>
+const sandboxDependencies = {
+  'react-json-tree': '^0.15.0',
+  'react-select': '^5.4.0'
+};
 
-    <Panel className="json-tree-wrapper" header={<p>formError</p>}>
-      <JSONTree data={formError} />
-    </Panel>
-  </div>
-);
 export default function Page() {
   return (
     <DefaultPage
@@ -61,19 +56,21 @@ export default function Page() {
         Checkbox,
         Panel,
         Radio,
-        JSONView,
-        MaskedInput,
+        JSONTree,
+        Select,
         Slider,
         DatePicker,
         Message,
         toaster,
-        Rate,
         Uploader,
         FlexboxGrid,
         IconButton,
         PlusIcon,
-        MinusIcon
+        MinusIcon,
+        Toggle
       }}
+      sandboxDependencies={sandboxDependencies}
+      sandboxFiles={files}
     />
   );
 }

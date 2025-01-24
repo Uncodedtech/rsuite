@@ -1,16 +1,17 @@
-import { canUseDOM } from 'dom-lib';
+import canUseDOM from 'dom-lib/canUseDOM';
+import { CustomProviderProps } from 'rsuite';
 
-export type ThemeType = 'default' | 'dark';
+export type ThemeType = CustomProviderProps['theme'];
 export type DirectionType = 'rtl' | 'ltr';
 
 export const getDefaultTheme = (): ThemeType => {
   if (!canUseDOM) {
-    return 'default';
+    return 'light';
   }
   if (matchMedia?.('(prefers-color-scheme: dark)').matches) {
     return 'dark';
   }
-  return 'default';
+  return 'light';
 };
 
 export const THEME_KEY = 'theme';
@@ -28,7 +29,7 @@ export const getThemeCssPath = (themeName: ThemeType, direction: DirectionType):
   }.css`;
 
 export function getStylesheetPath(dir: DirectionType): string {
-  return `/_next/static/css/docs${dir === 'rtl' ? '-rtl' : ''}.css`;
+  return `/_next/static/css/pages/_app${dir === 'rtl' ? '-rtl' : ''}.css`;
 }
 
 export const readThemeName = (): ThemeType => {

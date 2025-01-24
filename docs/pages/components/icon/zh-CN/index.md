@@ -1,18 +1,24 @@
-# Icons
+# Icon 图标
 
-在 React Suite 应用中使用图标，我们提供了一些知道和建议。
+在 React Suite 应用中使用图标，我们提供了一些指导和建议。
 
 ## React Suite 图标
 
-我们提供了一套图标组件，你需要安装`@rsuite/icons`图标组件。
+<a href="/resources/icons" target="_blank" rel="noopener noreferrer" title="React Suite Icons" >
+ <img src="../../../../public/images/icons.png" alt="React Icons" style="max-width: 400px; margin-bottom:20px">
+</a>
 
-> [React Suite 图标库](/zh/tools/icons)
+我们提供了一套图标组件，您需要安装`@rsuite/icons`图标组件。
 
-<!--{include:(components/icon/fragments/install.md)}-->
+## 安装
 
-**使用**
+<!--{include:<install-guide>}-->
 
-<!--{include:(components/icon/fragments/import.md)}-->
+## 获取组件
+
+<!--{include:<import-guide>}-->
+
+## 使用示例
 
 ### 大小
 
@@ -68,7 +74,7 @@ npm install react-icons --save
 
 ### Iconfont 图标
 
-如果你是 [iconfont.cn](https://iconfont.cn) 的用户，可以使用 `createIconFont` 方法导入图标资源，在组件中使用。
+如果您是 [iconfont.cn](https://iconfont.cn) 的用户，可以使用 `createIconFont` 方法导入图标资源，在组件中使用。
 
 <!--{include:`create-icon-font.md`}-->
 
@@ -93,7 +99,7 @@ npm install react-icons --save
 | 属性名称    | 类型 `(默认值)`                  | 描述                                                                                |
 | ----------- | -------------------------------- | ----------------------------------------------------------------------------------- |
 | commonProps | HTMLAttributes&lt;SVGElement&gt; | 给所有图标组件设置额外公共的属性                                                    |
-| scriptUrl   | string &#124; string[]           | [iconfont.cn](https://iconfont.cn) 项目在线生成的 js 地址，当然你也可以使用本地地址 |
+| scriptUrl   | string &#124; string[]           | [iconfont.cn](https://iconfont.cn) 项目在线生成的 js 地址，当然您也可以使用本地地址 |
 
 ### `<IconFont>`
 

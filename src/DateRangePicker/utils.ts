@@ -1,77 +1,93 @@
-import { toLocalTimeZone, toTimeZone, zonedDate } from '../utils/timeZone';
-import { RangeType, ValueType } from './types';
-import { TimeZone, DateUtils } from '../utils';
+import { DateRange } from './types';
+import {
+  addMonths,
+  isSameDay,
+  shouldRenderTime,
+  isSameSecond,
+  startOfMonth,
+  endOfMonth,
+  startOfISOWeek,
+  endOfISOWeek,
+  startOfWeek,
+  startOfToday,
+  endOfWeek,
+  differenceInCalendarMonths,
+  copyTime
+} from '@/internals/utils/date';
+import type { Locale } from 'date-fns';
 
-export const setTimingMargin = (date, way = 'left'): Date =>
-  way === 'right' ? DateUtils.endOfDay(date) : DateUtils.startOfDay(date);
-
-export const toLocalValue = (value: ValueType, timeZone: string): ValueType => {
-  if (typeof value === 'undefined') {
-    return value;
-  }
-  return (value ?? []).map(item => toLocalTimeZone(item, timeZone)) as ValueType;
-};
-
-export const toZonedValue = (value: ValueType, timeZone: string): ValueType => {
-  if (typeof value === 'undefined') {
-    return value;
-  }
-  return (value ?? []).map(item => toTimeZone(item, timeZone)) as ValueType;
-};
-
-export function getCalendarDate({
+export function getSafeCalendarDate({
   value,
-  timeZone
+  calendarKey = 'start',
+  allowSameMonth
 }: {
-  value?: ValueType;
-  timeZone: string | undefined;
-}): ValueType {
+  value: [] | [Date] | [Date, Date] | null;
+  calendarKey?: 'start' | 'end';
+  allowSameMonth?: boolean;
+}): DateRange {
   // Update calendarDate if the value is not null
   value = value ?? [];
+
+  const gap = allowSameMonth ? 0 : 1;
+
   if (value[0] && value[1]) {
-    const sameMonth = DateUtils.isSameMonth(value[0], value[1]);
-    return [value[0], sameMonth ? DateUtils.addMonths(value[1], 1) : value[1]];
+    const diffMonth = differenceInCalendarMonths(value[1], value[0]);
+
+    if (calendarKey === 'start') {
+      return [
+        value[0],
+        diffMonth <= 0 ? copyTime({ from: value[1], to: addMonths(value[0], gap) }) : value[1]
+      ];
+    } else if (calendarKey === 'end') {
+      return [
+        diffMonth <= 0 ? copyTime({ from: value[0], to: addMonths(value[1], -gap) }) : value[0],
+        value[1]
+      ];
+    }
+
+    // If only the start date
+  } else if (value[0]) {
+    return [value[0], addMonths(value[0], gap)];
   }
 
-  const todayDate = zonedDate(timeZone);
-  return [todayDate, DateUtils.addMonths(todayDate, 1)];
+  const todayDate = startOfToday();
+  return [todayDate, addMonths(todayDate, gap)];
 }
 
-export const getDefaultRanges = (timeZone: string): RangeType[] => {
-  const todayDate = TimeZone.zonedDate(timeZone);
-  return [
-    {
-      label: 'today',
-      value: [setTimingMargin(todayDate), setTimingMargin(todayDate, 'right')]
-    },
-    {
-      label: 'yesterday',
-      value: [
-        setTimingMargin(DateUtils.addDays(todayDate, -1)),
-        setTimingMargin(DateUtils.addDays(todayDate, -1), 'right')
-      ]
-    },
-    {
-      label: 'last7Days',
-      value: [setTimingMargin(DateUtils.subDays(todayDate, 6)), setTimingMargin(todayDate, 'right')]
-    }
-  ];
-};
+export const isSameRange = (source: DateRange | null, dest: DateRange | null, format: string) => {
+  // If both are null, reguard as same
+  if (null === source && null === dest) return true;
+  // If only one is null, regard as different
+  if (null === source || null === dest) return false;
 
-export const isSameValueType = (source: ValueType, dest: ValueType) =>
-  source?.[0]?.valueOf() === dest?.[0]?.valueOf() &&
-  source?.[1]?.valueOf() === dest?.[1]?.valueOf();
+  let result = isSameDay(source[0], dest[0]) && isSameDay(source[1], dest[1]);
 
-export const getMonthHoverRange = (date: Date): ValueType => [
-  DateUtils.startOfMonth(date),
-  DateUtils.endOfMonth(date)
-];
-
-export const getWeekHoverRange = (isoWeek: boolean, date: Date): ValueType => {
-  if (isoWeek) {
-    // set to the first day of this week according to ISO 8601, 12:00 am
-    return [DateUtils.startOfISOWeek(date), DateUtils.endOfISOWeek(date)];
+  if (shouldRenderTime(format)) {
+    result &&= isSameSecond(source[0], dest[0]) && isSameSecond(source[1], dest[1]);
   }
 
-  return [DateUtils.startOfWeek(date), DateUtils.endOfWeek(date)];
+  return result;
+};
+
+export const getMonthHoverRange = (date: Date): DateRange => [startOfMonth(date), endOfMonth(date)];
+
+export const getWeekHoverRange = (
+  date: Date,
+  options: {
+    isoWeek: boolean;
+    weekStart: 0 | 1 | 2 | 3 | 4 | 5 | 6;
+    locale?: Locale;
+  }
+): DateRange => {
+  const { isoWeek, weekStart, locale } = options;
+
+  if (isoWeek) {
+    // set to the first day of this week according to ISO 8601, 12:00 am
+    return [startOfISOWeek(date), endOfISOWeek(date)];
+  }
+
+  return [
+    startOfWeek(date, { weekStartsOn: weekStart, locale }),
+    endOfWeek(date, { weekStartsOn: weekStart, locale })
+  ];
 };

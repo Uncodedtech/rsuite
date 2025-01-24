@@ -1,13 +1,38 @@
 <!--start-code-->
 
 ```js
-const styles = {
-  radioGroupLabel: {
-    padding: '8px 12px',
-    display: 'inline-block',
-    verticalAlign: 'middle'
-  }
-};
+import {
+  Form,
+  Button,
+  ButtonToolbar,
+  RadioGroup,
+  Radio,
+  Checkbox,
+  CheckboxGroup,
+  Slider,
+  DatePicker,
+  DateRangePicker,
+  CheckPicker,
+  SelectPicker,
+  TagPicker,
+  InputPicker,
+  Cascader,
+  MultiCascader,
+  Rate,
+  Uploader,
+  Panel,
+  Toggle
+} from 'rsuite';
+
+import { mockTreeData } from './mock';
+
+const treeData = mockTreeData({ limits: [2, 3, 3], labels: ['Provincial', 'County', 'Town'] });
+const selectData = ['Eugenia', 'Bryan', 'Linda', 'Nancy', 'Lloyd', 'Alice'].map(item => ({
+  label: item,
+  value: item
+}));
+
+const RadioLabel = ({ children }) => <label style={{ padding: 7 }}>{children}</label>;
 
 const defaultFormValue = {
   input: '',
@@ -15,14 +40,15 @@ const defaultFormValue = {
   radio: '',
   slider: 0,
   datePicker: null,
-  dateRangePicker: [],
+  dateRangePicker: null,
   checkPicker: [],
   selectPicker: '',
   tagPicker: [],
   inputPicker: '',
   cascader: '',
   multiCascader: [],
-  rate: 0
+  rate: 0,
+  enable: false
 };
 
 const initFormValue = {
@@ -33,47 +59,16 @@ const initFormValue = {
   slider: 10,
   datePicker: new Date(),
   dateRangePicker: [new Date(), new Date()],
-  checkPicker: [
-    'Eugenia',
-    'Kariane',
-    'Louisa',
-    'Marty',
-    'Kenya',
-    'Hal',
-    'Julius',
-    'Travon',
-    'Vincenza',
-    'Dominic',
-    'Pearlie',
-    'Tyrel',
-    'Jaylen',
-    'Rogelio'
-  ],
-  selectPicker: 'Louisa',
-  tagPicker: [
-    'Eugenia',
-    'Kariane',
-    'Louisa',
-    'Marty',
-    'Kenya',
-    'Hal',
-    'Julius',
-    'Travon',
-    'Vincenza',
-    'Dominic',
-    'Pearlie',
-    'Tyrel',
-    'Jaylen',
-    'Rogelio'
-  ],
-  inputPicker: 'Rogelio',
-  cascader: '1-1-5',
-  multiCascader: ['1-1-4', '1-1-5'],
+  checkPicker: ['Eugenia', 'Bryan', 'Linda', 'Nancy', 'Lloyd', 'Alice'],
+  selectPicker: 'Eugenia',
+  tagPicker: ['Eugenia', 'Bryan', 'Linda', 'Nancy', 'Lloyd', 'Alice'],
+  inputPicker: 'Eugenia',
+  cascader: '1-1-2',
+  multiCascader: ['1-1-2', '1-1-3'],
   rate: 2
 };
 
 const App = () => {
-  const cascaderData = data;
   const [formValue, setFormValue] = React.useState(initFormValue);
   const [status, setStatus] = React.useState('disabled');
   const disabled = status === 'disabled';
@@ -90,7 +85,7 @@ const App = () => {
         onChange={formValue => setFormValue(formValue)}
       >
         <RadioGroup appearance="picker" inline value={status} onChange={setStatus}>
-          <span style={styles.radioGroupLabel}>Change status: </span>
+          <RadioLabel>Change status: </RadioLabel>
           <Radio value="normal">normal</Radio>
           <Radio value="readonly">readonly</Radio>
           <Radio value="disabled">disabled</Radio>
@@ -141,6 +136,21 @@ const App = () => {
           />
         </Form.Group>
 
+        <Form.Group controlId="checkPicker">
+          <Form.ControlLabel>CheckPicker:</Form.ControlLabel>
+          <Form.Control name="checkPicker" accepter={CheckPicker} data={selectData} />
+        </Form.Group>
+
+        <Form.Group controlId="selectPicker">
+          <Form.ControlLabel>SelectPicker:</Form.ControlLabel>
+          <Form.Control name="selectPicker" accepter={SelectPicker} data={selectData} />
+        </Form.Group>
+
+        <Form.Group controlId="tagPicker">
+          <Form.ControlLabel>TagPicker:</Form.ControlLabel>
+          <Form.Control name="tagPicker" accepter={TagPicker} data={selectData} />
+        </Form.Group>
+
         <Form.Group controlId="datePicker">
           <Form.ControlLabel>DatePicker:</Form.ControlLabel>
           <Form.Control name="datePicker" accepter={DatePicker} />
@@ -151,34 +161,19 @@ const App = () => {
           <Form.Control name="dateRangePicker" accepter={DateRangePicker} />
         </Form.Group>
 
-        <Form.Group controlId="checkPicker">
-          <Form.ControlLabel>CheckPicker:</Form.ControlLabel>
-          <Form.Control name="checkPicker" accepter={CheckPicker} data={pickerData} />
-        </Form.Group>
-
-        <Form.Group controlId="selectPicker">
-          <Form.ControlLabel>SelectPicker:</Form.ControlLabel>
-          <Form.Control name="selectPicker" accepter={SelectPicker} data={pickerData} />
-        </Form.Group>
-
-        <Form.Group controlId="tagPicker">
-          <Form.ControlLabel>TagPicker:</Form.ControlLabel>
-          <Form.Control name="tagPicker" accepter={TagPicker} data={pickerData} />
-        </Form.Group>
-
         <Form.Group controlId="inputPicker">
           <Form.ControlLabel>InputPicker:</Form.ControlLabel>
-          <Form.Control name="inputPicker" accepter={InputPicker} data={pickerData} />
+          <Form.Control name="inputPicker" accepter={InputPicker} data={selectData} />
         </Form.Group>
 
         <Form.Group controlId="cascader">
           <Form.ControlLabel>Cascader:</Form.ControlLabel>
-          <Form.Control name="cascader" accepter={Cascader} data={cascaderData} />
+          <Form.Control name="cascader" accepter={Cascader} data={treeData} />
         </Form.Group>
 
         <Form.Group controlId="multiCascader">
           <Form.ControlLabel>MultiCascader:</Form.ControlLabel>
-          <Form.Control name="multiCascader" accepter={MultiCascader} data={cascaderData} />
+          <Form.Control name="multiCascader" accepter={MultiCascader} data={treeData} />
         </Form.Group>
 
         <Form.Group controlId="rate">
@@ -188,14 +183,24 @@ const App = () => {
 
         <Form.Group controlId="uploader">
           <Form.ControlLabel>Uploader:</Form.ControlLabel>
-          <Form.Control name="uploader" accepter={Uploader} />
+          <Form.Control name="uploader" accepter={Uploader} action="#" />
+        </Form.Group>
+
+        <Form.Group controlId="toggle">
+          <Form.ControlLabel>Toggle:</Form.ControlLabel>
+          <Form.Control
+            name="enable"
+            accepter={Toggle}
+            unCheckedChildren="Disabled"
+            checkedChildren="Enabled"
+          />
         </Form.Group>
       </Form>
     </Panel>
   );
 };
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

@@ -6,3 +6,11 @@
     }
   }
 }
+
+.high-contrast-mode(@rules) {
+  & when (@enable-high-contrast = true) {
+    .rs-theme-high-contrast & {
+      @rules();
+    }
+  }
+}

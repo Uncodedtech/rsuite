@@ -1,4 +1,5 @@
-@import '../../styles/common';
+@import '../../styles/common.less';
+@import '../../internals/CloseButton/styles/index.less';
 
 //
 // Tags
@@ -7,7 +8,7 @@
 .rs-tag {
   display: inline-block;
   background-color: var(--rs-tag-bg);
-  color: var(--rs-text-primary);
+  color: var(--rs-tag-text);
   border-radius: 6px;
   line-height: 20px;
 
@@ -17,20 +18,8 @@
 
   &-icon-close {
     position: absolute;
-    font-size: 12px;
-  }
-
-  &-default &-icon-close:hover {
-    color: var(--rs-tag-close);
-  }
-
-  &-group {
-    margin: (-1 * @tag-gap) 0 0 (-1 * @tag-gap);
-  }
-
-  &-group > & {
-    margin-top: @tag-gap;
-    margin-left: @tag-gap;
+    top: 0;
+    right: 0;
   }
 
   &-lg {
@@ -80,7 +69,10 @@
 // Colorful tags
 each(@spectrum, .(@color) {
   .rs-tag-@{color} {
-    background-color: var(~'--rs-@{color}-500');
-    color: #ffffff;
+    --rs-tag-bg: var(~'--rs-@{color}-500');
+    --rs-tag-text: #fff;
+
+    background-color: var(--rs-tag-bg);
+    color: var(--rs-tag-text);
   }
 });

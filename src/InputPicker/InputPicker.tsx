@@ -1,6 +1,4 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import PropTypes from 'prop-types';
-import isUndefined from 'lodash/isUndefined';
+import React, { useEffect } from 'react';
 import isNil from 'lodash/isNil';
 import isFunction from 'lodash/isFunction';
 import remove from 'lodash/remove';
@@ -8,67 +6,60 @@ import clone from 'lodash/clone';
 import isArray from 'lodash/isArray';
 import omit from 'lodash/omit';
 import pick from 'lodash/pick';
-import { getWidth } from 'dom-lib';
-import shallowEqual from '../utils/shallowEqual';
-import { filterNodesOfTree } from '../utils/treeUtils';
-import Plaintext from '../Plaintext';
-import { InputPickerLocale } from '../locales';
+import Tag from '../Tag';
+import TextBox from './TextBox';
+import Stack, { type StackProps } from '../Stack';
+import useInput from './hooks/useInput';
+import useData, { type InputItemDataType } from './hooks/useData';
+import Plaintext, { type PlaintextProps } from '@/internals/Plaintext';
+import { filterNodesOfTree } from '@/internals/Tree/utils';
+import { useClassNames, useControlled, useEventCallback } from '@/internals/hooks';
+import { KEY_VALUES } from '@/internals/constants';
+import { useTagContext } from './InputPickerContext';
+import { convertSize } from './utils';
+import { useCustom } from '../CustomProvider';
 import {
+  forwardRef,
+  shallowEqual,
+  getDataGroupBy,
   createChainedFunction,
   tplTransform,
-  getDataGroupBy,
-  useClassNames,
-  useCustom,
-  useControlled,
-  mergeRefs
-} from '../utils';
-
+  mergeRefs,
+  isOneOf
+} from '@/internals/utils';
 import {
-  DropdownMenu,
-  DropdownMenuItem,
-  DropdownMenuCheckItem,
+  Listbox,
+  ListItem,
+  ListCheckItem,
   PickerToggle,
-  PickerOverlay,
+  PickerPopup,
   PickerToggleTrigger,
   useFocusItemValue,
   usePickerClassName,
   useSearch,
-  usePublicMethods,
+  usePickerRef,
   useToggleKeyDownEvent,
   pickTriggerPropKeys,
   omitTriggerPropKeys,
-  OverlayTriggerInstance,
   PositionChildProps,
-  PickerComponent,
-  listPickerPropTypes
-} from '../Picker';
-
-import Tag, { TagProps } from '../Tag';
-import { ItemDataType, FormControlPickerProps } from '../@types/common';
-import { SelectProps } from '../SelectPicker';
-import InputAutosize from './InputAutosize';
-import InputSearch from './InputSearch';
-
-interface InputItemDataType extends ItemDataType {
-  create?: boolean;
-}
+  PickerToggleProps
+} from '@/internals/Picker';
+import type { ItemDataType, FormControlPickerProps } from '@/internals/types';
+import type { InputPickerLocale } from '../locales';
+import type { SelectProps } from '../SelectPicker';
 
 export type ValueType = any;
-export interface InputPickerProps<T = ValueType>
-  extends FormControlPickerProps<T, InputPickerLocale, InputItemDataType>,
-    SelectProps<T> {
+export interface InputPickerProps<V = ValueType>
+  extends FormControlPickerProps<V, InputPickerLocale, InputItemDataType>,
+    SelectProps<V>,
+    Pick<PickerToggleProps, 'caretAs' | 'loading'> {
   tabIndex?: number;
-
-  multi?: boolean;
 
   /** Settings can create new options */
   creatable?: boolean;
 
-  /**  Tag related props. */
-  tagProps?: TagProps;
-
   /** Option to cache value when searching asynchronously */
-  cacheData?: InputItemDataType[];
+  cacheData?: InputItemDataType<V>[];
 
   /** The `onBlur` attribute for the `input` element. */
   onBlur?: React.FocusEventHandler;
@@ -77,281 +68,248 @@ export interface InputPickerProps<T = ValueType>
   onFocus?: React.FocusEventHandler;
 
   /** Called when the option is created */
-  onCreate?: (value: ValueType, item: ItemDataType, event: React.SyntheticEvent) => void;
+  onCreate?: (value: V, item: ItemDataType, event: React.SyntheticEvent) => void;
+
+  /**
+   * Customize whether to display "Create option" action with given textbox value
+   *
+   * By default, InputPicker hides "Create option" action when textbox value matches any filtered item's [valueKey] property
+   *
+   * @param searchKeyword Value of the textbox
+   * @param filteredData The items filtered by the searchKeyword
+   */
+  shouldDisplayCreateOption?: (
+    searchKeyword: string,
+    filteredData: InputItemDataType<V>[]
+  ) => boolean;
 }
 
-const defaultProps: Partial<InputPickerProps> = {
-  as: 'div',
-  appearance: 'default',
-  cleanable: true,
-  cacheData: [],
-  classPrefix: 'picker',
-  data: [],
-  disabledItemValues: [],
-  valueKey: 'value',
-  labelKey: 'label',
-  placement: 'bottomStart',
-  searchable: true,
-  menuAutoWidth: true,
-  menuMaxHeight: 320,
-  tagProps: {}
-};
+/**
+ * Single item selector with text box input.
+ *
+ * @see https://rsuitejs.com/components/input-picker
+ */
+const InputPicker = forwardRef<'div', InputPickerProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('InputPicker', props);
+  const {
+    as: Component = 'div',
+    appearance = 'default',
+    cleanable = true,
+    cacheData = [],
+    classPrefix = 'picker',
+    data: controlledData = [],
+    disabled,
+    readOnly,
+    plaintext,
+    defaultValue,
+    defaultOpen = false,
+    disabledItemValues = [],
+    locale,
+    toggleAs,
+    style,
+    size,
+    searchable = true,
+    open: controlledOpen,
+    placeholder,
+    placement = 'bottomStart',
+    groupBy,
+    menuClassName,
+    menuStyle,
+    menuAutoWidth = true,
+    menuMaxHeight = 320,
+    creatable,
+    shouldDisplayCreateOption,
+    value: valueProp,
+    valueKey = 'value',
+    virtualized,
+    labelKey = 'label',
+    listProps,
+    id,
+    tabIndex,
+    sort,
+    renderMenu,
+    renderExtraFooter,
+    renderValue,
+    renderMenuItem,
+    renderMenuGroup,
+    onEnter,
+    onEntered,
+    onExit,
+    onExited,
+    onChange,
+    onClean,
+    onCreate,
+    onSearch,
+    onSelect,
+    onBlur,
+    onFocus,
+    searchBy,
+    ...rest
+  } = propsWithDefaults;
 
-const InputPicker: PickerComponent<InputPickerProps> = React.forwardRef(
-  (props: InputPickerProps, ref) => {
-    const {
-      as: Component,
-      cleanable,
-      cacheData,
-      classPrefix,
-      data: controlledData,
-      disabled,
-      readOnly,
-      plaintext,
-      defaultValue,
-      defaultOpen,
-      disabledItemValues,
-      locale: overrideLocale,
-      toggleAs,
-      style,
-      searchable,
-      multi,
-      open: controlledOpen,
-      placeholder,
-      tagProps,
-      groupBy,
-      menuClassName,
-      menuStyle,
-      menuAutoWidth,
-      menuMaxHeight,
-      creatable,
-      value: valueProp,
-      valueKey,
-      virtualized,
-      labelKey,
-      listProps,
-      id,
-      tabIndex,
-      sort,
-      renderMenu,
-      renderExtraFooter,
-      renderValue,
-      renderMenuItem,
-      renderMenuGroup,
-      onEnter,
-      onEntered,
-      onExit,
-      onExited,
-      onChange,
-      onClean,
-      onCreate,
-      onSearch,
-      onSelect,
-      onOpen,
-      onClose,
-      onBlur,
-      onFocus,
-      searchBy,
-      placement,
-      ...rest
-    } = props;
+  const { multi, tagProps, trigger, disabledOptions, onTagRemove, renderCheckbox } =
+    useTagContext();
 
-    if (groupBy === valueKey || groupBy === labelKey) {
-      throw Error('`groupBy` can not be equal to `valueKey` and `labelKey`');
+  if (groupBy === valueKey || groupBy === labelKey) {
+    throw Error('`groupBy` can not be equal to `valueKey` and `labelKey`');
+  }
+
+  const { trigger: triggerRef, root, target, overlay, list } = usePickerRef(ref);
+  const { prefix, merge } = useClassNames(classPrefix);
+  const [open, setOpen] = useControlled(controlledOpen, defaultOpen);
+  const { inputRef, inputProps, focus, blur } = useInput({ multi, triggerRef });
+
+  const handleDataChange = (data: ItemDataType[]) => {
+    setFocusItemValue(data?.[0]?.[valueKey]);
+  };
+
+  const { data, dataWithCache, newData, setNewData } = useData({
+    controlledData,
+    cacheData,
+    onChange: handleDataChange
+  });
+
+  const [value, setValue, isControlled] = useControlled<ValueType>(
+    valueProp,
+    multi ? defaultValue || [] : defaultValue
+  );
+
+  const cloneValue = () => (multi ? clone(value) || [] : value);
+
+  const handleClose = useEventCallback(() => {
+    triggerRef?.current?.close();
+
+    // The focus is on the trigger button after closing
+    target.current?.focus?.();
+  });
+
+  const focusItemValueOptions = { data: dataWithCache, valueKey, target: () => overlay.current };
+
+  // Used to hover the focuse item  when trigger `onKeydown`
+  const { focusItemValue, setFocusItemValue, onKeyDown } = useFocusItemValue(
+    multi ? value?.[0] : value,
+    focusItemValueOptions
+  );
+
+  const onSearchCallback = useEventCallback(
+    (searchKeyword: string, filteredData: InputItemDataType[], event: React.SyntheticEvent) => {
+      if (!disabledOptions) {
+        // The first option after filtering is the focus.
+        let firstItemValue = filteredData?.[0]?.[valueKey];
+
+        // If there is no value in the option and new options are supported, the search keyword is the first option
+        if (!firstItemValue && creatable) {
+          firstItemValue = searchKeyword;
+        }
+
+        setFocusItemValue(firstItemValue);
+      }
+
+      onSearch?.(searchKeyword, event);
+    }
+  );
+
+  const searchOptions = { labelKey, searchBy, callback: onSearchCallback };
+
+  // Use search keywords to filter options.
+  const { searchKeyword, resetSearch, checkShouldDisplay, handleSearch } = useSearch(
+    data,
+    searchOptions
+  );
+
+  // Update the position of the menu when the search keyword and value change
+  useEffect(() => {
+    triggerRef.current?.updatePosition?.();
+  }, [searchKeyword, value]);
+
+  const getDataItem = (value: any) => {
+    // Find active `MenuItem` by `value`
+    const activeItem = dataWithCache.find(item => shallowEqual(item[valueKey], value));
+
+    let itemNode: React.ReactNode = placeholder;
+
+    if (activeItem?.[labelKey]) {
+      itemNode = activeItem?.[labelKey];
     }
 
-    const overlayRef = useRef<HTMLDivElement>();
-    const targetRef = useRef<HTMLButtonElement>();
-    const triggerRef = useRef<OverlayTriggerInstance>();
-    const inputRef = useRef<any>();
-    const { locale } = useCustom<InputPickerLocale>(['Picker', 'InputPicker'], overrideLocale);
+    return {
+      isValid: !!activeItem,
+      activeItem,
+      itemNode
+    };
+  };
 
-    const { prefix, merge } = useClassNames(classPrefix);
-    const [uncontrolledData, setData] = useState(controlledData);
-    const [maxWidth, setMaxWidth] = useState(100);
-    const [newData, setNewData] = useState([]);
-    const [uncontrolledOpen, setOpen] = useState(defaultOpen);
-    const open = isUndefined(controlledOpen) ? uncontrolledOpen : controlledOpen;
-
-    const getAllData = useCallback(() => [].concat(uncontrolledData, newData), [
-      uncontrolledData,
-      newData
-    ]);
-    const getAllDataAndCache = useCallback(() => [].concat(getAllData(), cacheData), [
-      getAllData,
-      cacheData
-    ]);
-
-    const [value, setValue, isControlled] = useControlled<ValueType>(
-      valueProp,
-      multi ? defaultValue || [] : defaultValue
-    );
-
-    const cloneValue = useCallback(() => (multi ? clone(value) || [] : value), [multi, value]);
-
-    const handleClose = useCallback(() => {
-      triggerRef?.current?.close();
-    }, [triggerRef]);
-
-    // Used to hover the focuse item  when trigger `onKeydown`
-    const { focusItemValue, setFocusItemValue, onKeyDown } = useFocusItemValue(
-      multi ? value?.[0] : value,
-      {
-        data: getAllDataAndCache(),
-        valueKey,
-        target: () => overlayRef.current
-      }
-    );
-
-    const handleSearchCallback = useCallback(
-      (
-        searchKeyword: string,
-        filteredData: InputItemDataType[],
-        event: React.SyntheticEvent<any>
-      ) => {
-        // The first option after filtering is the focus.
-        setFocusItemValue(filteredData?.[0]?.[valueKey] || searchKeyword);
-        onSearch?.(searchKeyword, event);
-      },
-      [setFocusItemValue, onSearch, valueKey]
-    );
-
-    // Use search keywords to filter options.
-    const { searchKeyword, setSearchKeyword, checkShouldDisplay, handleSearch } = useSearch({
-      labelKey,
-      data: getAllData(),
-      searchBy,
-      callback: handleSearchCallback
-    });
-
-    // Update the state when the data in props changes
-    useEffect(() => {
-      if (controlledData && !shallowEqual(controlledData, uncontrolledData)) {
-        setData(controlledData);
-        setNewData([]);
-        setFocusItemValue(controlledData?.[0]?.[valueKey]);
-      }
-    }, [setFocusItemValue, controlledData, uncontrolledData, valueKey]);
-
-    useEffect(() => {
-      // In multiple selection, you need to set a maximum width for the input.
-      if (triggerRef.current?.root) {
-        setMaxWidth(getWidth(triggerRef.current.root));
-      }
-    }, []);
-
-    // Update the position of the menu when the search keyword and value change
-    useEffect(() => {
-      triggerRef.current?.updatePosition?.();
-    }, [searchKeyword, value]);
-
-    const getDateItem = (value: any) => {
-      // Find active `MenuItem` by `value`
-      const allData = getAllDataAndCache();
-      const activeItem = allData.find(item => shallowEqual(item[valueKey], value));
-
-      let displayElement: React.ReactNode = placeholder;
-
-      if (activeItem?.[labelKey]) {
-        displayElement = activeItem?.[labelKey];
-      }
-
-      return {
-        isValid: !!activeItem,
-        activeItem,
-        displayElement
-      };
+  /**
+   * Convert the string of the newly created option into an object.
+   */
+  const createOption = (value: string) => {
+    const option = {
+      create: true,
+      [valueKey]: value,
+      [labelKey]: value
     };
 
-    const getInput = useCallback(() => (multi ? inputRef.current?.input : inputRef.current), [
-      inputRef,
-      multi
-    ]);
-    const focusInput = useCallback(() => getInput()?.focus(), [getInput]);
-    const blurInput = useCallback(() => getInput()?.blur(), [getInput]);
+    if (groupBy) {
+      return {
+        [groupBy]: locale?.newItem,
+        ...option
+      };
+    }
 
-    /**
-     * Convert the string of the newly created option into an object.
-     */
-    const createOption = useCallback(
-      (value: string) => {
-        if (groupBy) {
-          return {
-            create: true,
-            [groupBy]: locale?.newItem,
-            [valueKey]: value,
-            [labelKey]: value
-          };
-        }
+    return option;
+  };
 
-        return {
-          create: true,
-          [valueKey]: value,
-          [labelKey]: value
-        };
-      },
-      [groupBy, valueKey, labelKey, locale]
-    );
+  const handleChange = useEventCallback((value: any, event: React.SyntheticEvent) => {
+    onChange?.(value, event);
+  });
 
-    const handleChange = useCallback(
-      (value: any, event: React.SyntheticEvent<any>) => {
-        onChange?.(value, event);
-      },
-      [onChange]
-    );
+  const handleRemoveItemByTag = useEventCallback((tag: string, event: React.MouseEvent) => {
+    event.stopPropagation();
+    const val = cloneValue();
+    remove(val, itemVal => shallowEqual(itemVal, tag));
+    setValue(val);
+    handleChange(val, event);
+    onTagRemove?.(tag, event);
+  });
 
-    const handleRemoveItemByTag = useCallback(
-      (tag: string, event: React.MouseEvent) => {
-        event.stopPropagation();
-        const val = cloneValue();
-        remove(val, itemVal => shallowEqual(itemVal, tag));
-        setValue(val);
-        handleChange(val, event);
-      },
-      [setValue, cloneValue, handleChange]
-    );
+  const handleSelect = useEventCallback(
+    (value: string | string[], item: InputItemDataType, event: React.SyntheticEvent) => {
+      onSelect?.(value, item, event);
 
-    const handleSelect = useCallback(
-      (value: string | string[], item: InputItemDataType, event: React.SyntheticEvent<any>) => {
-        onSelect?.(value, item, event);
+      if (creatable && item.create) {
+        delete item.create;
+        onCreate?.(value, item, event);
+        setNewData(newData.concat(item));
+      }
+    }
+  );
 
-        if (creatable && item.create) {
-          delete item.create;
-          onCreate?.(value, item, event);
-          setNewData(newData.concat(item));
-        }
-      },
-      [creatable, newData, onSelect, onCreate]
-    );
-
-    /**
-     * Callback triggered by single selection
-     * @param value
-     * @param item
-     * @param event
-     */
-    const handleItemSelect = (value: string, item: InputItemDataType, event: React.MouseEvent) => {
+  /**
+   * Callback triggered by single selection
+   * @param value
+   * @param item
+   * @param event
+   */
+  const handleSelectItem = useEventCallback(
+    (value: string, item: InputItemDataType, event: React.MouseEvent) => {
       setValue(value);
       setFocusItemValue(value);
-      setSearchKeyword('');
+      resetSearch();
       handleSelect(value, item, event);
       handleChange(value, event);
       handleClose();
-    };
+    }
+  );
 
-    /**
-     * Callback triggered by multiple selection
-     * @param nextItemValue
-     * @param item
-     * @param event
-     * @param checked
-     */
-    const handleCheckItemSelect = (
-      nextItemValue: string,
-      item: InputItemDataType,
-      event: React.MouseEvent,
-      checked: boolean
-    ) => {
+  /**
+   * Callback triggered by multiple selection
+   * @param nextItemValue
+   * @param item
+   * @param event
+   * @param checked
+   */
+  const handleCheckTag = useEventCallback(
+    (nextItemValue: string, item: InputItemDataType, event: React.MouseEvent, checked: boolean) => {
       const val = cloneValue();
       if (checked) {
         val.push(nextItemValue);
@@ -360,436 +318,433 @@ const InputPicker: PickerComponent<InputPickerProps> = React.forwardRef(
       }
 
       setValue(val);
-      setSearchKeyword('');
+      resetSearch();
       setFocusItemValue(nextItemValue);
       handleSelect(val, item, event);
       handleChange(val, event);
-      focusInput();
-    };
+      focus();
+    }
+  );
 
-    const selectFocusMenuCheckItem = useCallback(
-      (event: React.KeyboardEvent) => {
-        const val = cloneValue();
-        const data = getAllData();
+  const handleTagKeyPress = useEventCallback((event: React.KeyboardEvent) => {
+    // When composing, ignore the keypress event.
+    if (event.nativeEvent.isComposing) {
+      return;
+    }
+    const val = cloneValue();
+    let newItemValue = focusItemValue || '';
 
-        if (!focusItemValue || !data) {
-          return;
-        }
+    // In TagInput
+    if (multi && disabledOptions) {
+      newItemValue = searchKeyword;
+    }
 
-        // If the value is disabled in this option, it is returned.
-        if (disabledItemValues?.some(item => item === focusItemValue)) {
-          return;
-        }
+    if (!newItemValue || !data) {
+      return;
+    }
 
-        if (!val.some(v => shallowEqual(v, focusItemValue))) {
-          val.push(focusItemValue);
-        } else {
-          remove(val, itemVal => shallowEqual(itemVal, focusItemValue));
-        }
+    // If the value is disabled in this option, it is returned.
+    if (disabledItemValues?.some(item => item === newItemValue)) {
+      return;
+    }
 
-        let focusItem = data.find(item => shallowEqual(item?.[valueKey], focusItemValue));
+    if (!val.some(v => shallowEqual(v, newItemValue))) {
+      val.push(newItemValue);
+    } else if (!disabledOptions) {
+      remove(val, itemVal => shallowEqual(itemVal, newItemValue));
+    }
 
-        if (!focusItem) {
-          focusItem = createOption(focusItemValue);
-        }
+    let focusItem = data.find(item => shallowEqual(item?.[valueKey], newItemValue));
 
-        setValue(val);
-        setSearchKeyword('');
-        handleSelect(val, focusItem, event);
-        handleChange(val, event);
-      },
-      [
-        setValue,
-        cloneValue,
-        getAllData,
-        handleChange,
-        handleSelect,
-        createOption,
-        setSearchKeyword,
-        disabledItemValues,
-        focusItemValue,
-        valueKey
-      ]
-    );
+    if (!focusItem) {
+      focusItem = createOption(newItemValue);
+    }
 
-    const selectFocusMenuItem = useCallback(
-      (event: React.KeyboardEvent) => {
-        if (!focusItemValue || !controlledData) {
-          return;
-        }
+    setValue(val);
+    resetSearch();
+    handleSelect(val, focusItem, event);
+    handleChange(val, event);
+  });
 
-        // If the value is disabled in this option, it is returned.
-        if (disabledItemValues?.some(item => item === focusItemValue)) {
-          return;
-        }
+  const handleMenuItemKeyPress = useEventCallback((event: React.KeyboardEvent) => {
+    if (!focusItemValue || !controlledData) {
+      return;
+    }
 
-        // Find active `MenuItem` by `value`
-        const allData = getAllData();
-        let focusItem = allData.find(item => shallowEqual(item[valueKey], focusItemValue));
+    // If the value is disabled in this option, it is returned.
+    if (disabledItemValues?.some(item => item === focusItemValue)) {
+      return;
+    }
 
-        if (!focusItem && focusItemValue === searchKeyword) {
-          focusItem = createOption(searchKeyword);
-        }
-        setValue(focusItemValue);
-        setSearchKeyword('');
+    // Find active `MenuItem` by `value`
+    let focusItem = data.find(item => shallowEqual(item[valueKey], focusItemValue));
 
-        handleSelect(focusItemValue, focusItem, event);
-        handleChange(focusItemValue, event);
-        handleClose();
-      },
-      [
-        setValue,
-        disabledItemValues,
-        controlledData,
-        focusItemValue,
-        valueKey,
-        searchKeyword,
-        handleClose,
-        setSearchKeyword,
-        createOption,
-        getAllData,
-        handleChange,
-        handleSelect
-      ]
-    );
+    // FIXME Bad state flow
+    if (!focusItem && focusItemValue === searchKeyword) {
+      focusItem = createOption(searchKeyword);
+    }
+    setValue(focusItemValue);
+    resetSearch();
 
-    usePublicMethods(ref, { triggerRef, overlayRef, targetRef });
+    if (focusItem) {
+      handleSelect(focusItemValue, focusItem, event);
+    }
+    handleChange(focusItemValue, event);
+    handleClose();
+  });
 
-    /**
-     * Remove the last item, after pressing the back key on the keyboard.
-     * @param event
-     */
-    const removeLastItem = useCallback(
-      (event: React.KeyboardEvent<HTMLInputElement>) => {
-        const target = event?.target as HTMLInputElement;
-        if (target?.tagName !== 'INPUT') {
-          focusInput();
-          return;
-        }
-        if (target?.tagName === 'INPUT' && target?.value) {
-          return;
-        }
-        const val = cloneValue();
-        val.pop();
-        setValue(val);
-        handleChange(val, event);
-      },
-      [setValue, focusInput, handleChange, cloneValue]
-    );
+  /**
+   * Remove the last item, after pressing the back key on the keyboard.
+   * @param event
+   */
+  const removeLastItem = useEventCallback((event: React.KeyboardEvent<HTMLInputElement>) => {
+    const target = event?.target as HTMLInputElement;
+    if (target?.tagName !== 'INPUT') {
+      focus();
+      return;
+    }
+    if (target?.tagName === 'INPUT' && target?.value) {
+      return;
+    }
+    const val = cloneValue();
+    val.pop();
+    setValue(val);
+    handleChange(val, event);
+  });
 
-    const handleClean = useCallback(
-      (event: React.SyntheticEvent<any>) => {
-        if (disabled || searchKeyword !== '') {
-          return;
-        }
-        setValue(null);
-        setFocusItemValue(null);
-        setSearchKeyword('');
-        handleChange(null, event);
-        onClean?.(event);
-      },
-      [
-        disabled,
-        searchKeyword,
-        onClean,
-        handleChange,
-        setValue,
-        setFocusItemValue,
-        setSearchKeyword
-      ]
-    );
+  const handleClean = useEventCallback((event: React.SyntheticEvent) => {
+    if (disabled) {
+      return;
+    }
 
-    const onPickerKeyDown = useToggleKeyDownEvent({
-      triggerRef,
-      targetRef,
-      overlayRef,
-      onMenuPressEnter: multi ? selectFocusMenuCheckItem : selectFocusMenuItem,
-      onMenuPressBackspace: multi ? removeLastItem : handleClean,
-      onMenuKeyDown: onKeyDown,
-      ...rest
-    });
+    // When there is a value in the search box and the user presses the delete key on the keyboard,
+    // do not trigger clearing
+    if (inputRef.current === event.target && searchKeyword !== '') {
+      return;
+    }
 
-    const handleExited = useCallback(() => {
-      setFocusItemValue(multi ? value?.[0] : value);
-      setSearchKeyword('');
-      onClose?.();
-    }, [setFocusItemValue, setSearchKeyword, onClose, value, multi]);
+    setValue(null);
+    setFocusItemValue(null);
+    resetSearch();
+    if (multi) {
+      handleChange([], event);
+    } else {
+      handleChange(null, event);
+    }
+    onClean?.(event);
+  });
 
-    const handleFocus = useCallback(() => {
-      if (!readOnly) {
-        setOpen(true);
-        triggerRef.current?.open();
-      }
-    }, [readOnly]);
+  const events = {
+    onMenuPressBackspace: multi ? removeLastItem : handleClean,
+    onMenuKeyDown: onKeyDown,
+    onMenuPressEnter: undefined as React.ReactEventHandler | undefined,
+    onKeyDown: undefined as React.ReactEventHandler | undefined
+  };
 
-    const handleBlur = useCallback(() => {
-      setOpen(false);
-    }, []);
+  const handleKeyPress = useEventCallback((event: React.KeyboardEvent<any>) => {
+    // When typing a space, create a tag.
+    if (isOneOf('Space', trigger) && event.key === KEY_VALUES.SPACE) {
+      handleTagKeyPress(event);
+      event.preventDefault();
+    }
 
-    const handleEnter = useCallback(() => {
-      focusInput();
+    // When typing a comma, create a tag.
+    if (isOneOf('Comma', trigger) && event.key === KEY_VALUES.COMMA) {
+      handleTagKeyPress(event);
+      event.preventDefault();
+    }
+  });
+
+  if (multi) {
+    if (isOneOf('Enter', trigger)) {
+      events.onMenuPressEnter = handleTagKeyPress;
+    }
+
+    if (creatable) {
+      events.onKeyDown = handleKeyPress;
+    }
+  } else {
+    events.onMenuPressEnter = handleMenuItemKeyPress;
+  }
+
+  const onPickerKeyDown = useToggleKeyDownEvent({
+    trigger: triggerRef,
+    target,
+    overlay,
+    ...events,
+    ...rest
+  });
+
+  const handleExited = useEventCallback(() => {
+    setFocusItemValue(multi ? value?.[0] : value);
+    resetSearch();
+  });
+
+  const handleFocus = useEventCallback((event: React.FocusEvent) => {
+    if (!readOnly) {
       setOpen(true);
-    }, [focusInput]);
+      triggerRef.current?.open();
+    }
+    onFocus?.(event);
+  });
 
-    const handleExit = useCallback(() => {
-      blurInput();
-      setOpen(false);
-    }, [blurInput]);
+  const handleEnter = useEventCallback(() => {
+    focus();
+    setOpen(true);
+  });
 
-    const renderDropdownMenuItem = (label: React.ReactNode, item: InputItemDataType) => {
-      // 'Create option "{0}"' =>  Create option "xxxxx"
-      const newLabel = item.create ? (
-        <span>{tplTransform(locale?.createOption, label)}</span>
-      ) : (
-        label
-      );
-      return renderMenuItem ? renderMenuItem(newLabel, item) : newLabel;
-    };
+  const handleExit = useEventCallback(() => {
+    blur();
+    setOpen(false);
+  });
 
-    const renderSingleValue = () => {
-      if (multi) {
-        return { isValid: false, displayElement: placeholder };
-      }
-      const dataItem = getDateItem(value);
-      let displayElement = dataItem.displayElement;
+  const renderListItem = (label: React.ReactNode, item: InputItemDataType) => {
+    // 'Create option "{0}"' =>  Create option "xxxxx"
+    const newLabel = item.create ? (
+      <span>{tplTransform(locale?.createOption || '', label)}</span>
+    ) : (
+      label
+    );
+    return renderMenuItem ? renderMenuItem(newLabel, item) : newLabel;
+  };
 
-      if (!isNil(value) && isFunction(renderValue)) {
-        displayElement = renderValue(value, dataItem.activeItem, displayElement);
-      }
+  const checkValue = () => {
+    if (multi) {
+      return { isValid: false, itemNode: null };
+    }
 
-      return { isValid: dataItem.isValid, displayElement };
-    };
+    const dataItem = getDataItem(value);
+    let itemNode = dataItem.itemNode;
 
-    const renderMultiValue = () => {
-      if (!multi) {
-        return null;
-      }
+    if (!isNil(value) && isFunction(renderValue)) {
+      itemNode = renderValue(value, dataItem.activeItem as ItemDataType<string | number>, itemNode);
+    }
 
-      const { closable = true, onClose, ...tagRest } = tagProps;
-      const tags = value || [];
-      const items = [];
+    return { isValid: dataItem.isValid, itemNode };
+  };
 
-      const tagElements = tags
-        .map(tag => {
-          const { isValid, displayElement, activeItem } = getDateItem(tag);
-          items.push(activeItem);
+  const renderMultiValue = () => {
+    if (!multi) {
+      return null;
+    }
 
-          if (!isValid) {
-            return null;
-          }
+    const { closable = true, onClose, ...tagRest } = tagProps;
+    const tags = value || [];
+    const items: (ItemDataType | undefined)[] = [];
 
-          return (
-            <Tag
-              {...tagRest}
-              key={tag}
-              size={rest.size === 'lg' ? 'lg' : rest.size === 'xs' ? 'sm' : 'md'}
-              closable={!disabled && closable && !readOnly && !plaintext}
-              title={typeof displayElement === 'string' ? displayElement : undefined}
-              onClose={createChainedFunction(handleRemoveItemByTag.bind(null, tag), onClose)}
-            >
-              {displayElement}
-            </Tag>
-          );
-        })
-        .filter(item => item !== null);
+    const tagElements = tags
+      .map(tag => {
+        const { isValid, itemNode, activeItem } = getDataItem(tag);
+        items.push(activeItem);
 
-      if ((tags.length > 0 || isControlled) && isFunction(renderValue)) {
-        return renderValue(value, items, tagElements);
-      }
+        if (!isValid) {
+          return null;
+        }
 
-      return tagElements;
-    };
+        return (
+          <Tag
+            role="option"
+            {...tagRest}
+            key={tag}
+            size={convertSize(size)}
+            closable={!disabled && closable && !readOnly && !plaintext}
+            title={typeof itemNode === 'string' ? itemNode : undefined}
+            onClose={createChainedFunction(handleRemoveItemByTag.bind(null, tag), onClose)}
+          >
+            {itemNode}
+          </Tag>
+        );
+      })
+      .filter(item => item !== null);
 
-    const renderDropdownMenu = (positionProps: PositionChildProps, speakerRef) => {
-      const { left, top, className } = positionProps;
-      const menuClassPrefix = multi ? 'picker-check-menu' : 'picker-select-menu';
-      const classes = merge(className, menuClassName, prefix(menuClassPrefix));
-      const styles = { ...menuStyle, left, top };
+    if ((tags.length > 0 || isControlled) && isFunction(renderValue)) {
+      return renderValue(value, items, tagElements);
+    }
 
-      let items = filterNodesOfTree(getAllData(), checkShouldDisplay);
+    return tagElements;
+  };
 
-      if (creatable && searchKeyword && !items.find(item => item[valueKey] === searchKeyword)) {
-        items = [...items, createOption(searchKeyword)];
-      }
+  const renderPopup = (positionProps: PositionChildProps, speakerRef) => {
+    const { left, top, className } = positionProps;
+    const menuClassPrefix = multi ? 'picker-check-menu' : 'picker-select-menu';
+    const classes = merge(className, menuClassName, prefix(multi ? 'check-menu' : 'select-menu'));
+    const styles = { ...menuStyle, left, top };
 
-      // Create a tree structure data when set `groupBy`
-      if (groupBy) {
-        items = getDataGroupBy(items, groupBy, sort);
-      } else if (typeof sort === 'function') {
-        items = items.sort(sort(false));
-      }
+    let items: ItemDataType[] = filterNodesOfTree(data, checkShouldDisplay);
 
-      const menu = items.length ? (
-        <DropdownMenu
-          id={id ? `${id}-listbox` : undefined}
-          listProps={listProps}
-          disabledItemValues={disabledItemValues}
-          valueKey={valueKey}
-          labelKey={labelKey}
-          classPrefix={menuClassPrefix}
-          dropdownMenuItemClassPrefix={multi ? undefined : `${menuClassPrefix}-item`}
-          dropdownMenuItemAs={multi ? DropdownMenuCheckItem : DropdownMenuItem}
-          activeItemValues={multi ? value : [value]}
-          focusItemValue={focusItemValue}
-          maxHeight={menuMaxHeight}
-          data={items}
-          group={!isUndefined(groupBy)}
-          onSelect={multi ? handleCheckItemSelect : handleItemSelect}
-          renderMenuGroup={renderMenuGroup}
-          renderMenuItem={renderDropdownMenuItem}
-          virtualized={virtualized}
-        />
-      ) : (
-        <div className={prefix`none`}>{locale?.noResultsText}</div>
-      );
+    if (
+      creatable &&
+      (typeof shouldDisplayCreateOption === 'function'
+        ? shouldDisplayCreateOption(searchKeyword, items)
+        : searchKeyword && !items.find(item => item[valueKey] === searchKeyword))
+    ) {
+      items = [...items, createOption(searchKeyword)];
+    }
 
-      return (
-        <PickerOverlay
-          ref={mergeRefs(overlayRef, speakerRef)}
-          autoWidth={menuAutoWidth}
-          className={classes}
-          style={styles}
-          target={triggerRef}
-          onKeyDown={onPickerKeyDown}
-        >
-          {renderMenu ? renderMenu(menu) : menu}
-          {renderExtraFooter?.()}
-        </PickerOverlay>
-      );
-    };
+    // Create a tree structure data when set `groupBy`
+    if (groupBy) {
+      items = getDataGroupBy(items, groupBy, sort);
+    } else if (typeof sort === 'function') {
+      items = items.sort(sort(false));
+    }
 
-    const { isValid, displayElement } = renderSingleValue();
-    const tagElements = renderMultiValue();
+    if (disabledOptions) {
+      return <PickerPopup ref={mergeRefs(overlay, speakerRef)} />;
+    }
 
-    /**
-     * 1.Have a value and the value is valid.
-     * 2.Regardless of whether the value is valid, as long as renderValue is set, it is judged to have a value.
-     * 3.If renderValue returns null or undefined, hasValue is false.
-     */
-    const hasSingleValue = !isNil(value) && isFunction(renderValue) && !isNil(displayElement);
-    const hasMultiValue =
-      isArray(value) && value.length > 0 && isFunction(renderValue) && !isNil(tagElements);
-    const hasValue = multi ? !!tagElements?.length || hasMultiValue : isValid || hasSingleValue;
+    const menu = items.length ? (
+      <Listbox
+        listProps={listProps}
+        listRef={list}
+        disabledItemValues={disabledItemValues}
+        valueKey={valueKey}
+        labelKey={labelKey}
+        classPrefix={menuClassPrefix}
+        listItemClassPrefix={multi ? undefined : `${menuClassPrefix}-item`}
+        listItemAs={multi ? ListCheckItem : ListItem}
+        listItemProps={{ renderCheckbox }}
+        activeItemValues={multi ? value : [value]}
+        focusItemValue={focusItemValue}
+        maxHeight={menuMaxHeight}
+        data={items}
+        query={searchKeyword}
+        groupBy={groupBy}
+        onSelect={multi ? handleCheckTag : handleSelectItem}
+        renderMenuGroup={renderMenuGroup}
+        renderMenuItem={renderListItem}
+        virtualized={virtualized}
+      />
+    ) : (
+      <div className={prefix`none`}>{locale?.noResultsText}</div>
+    );
 
-    const [pickerClasses, usedClassNamePropKeys] = usePickerClassName({
-      ...props,
-      hasValue,
-      name: 'input'
-    });
+    return (
+      <PickerPopup
+        ref={mergeRefs(overlay, speakerRef)}
+        autoWidth={menuAutoWidth}
+        className={classes}
+        style={styles}
+        target={triggerRef}
+        onKeyDown={onPickerKeyDown}
+      >
+        {renderMenu ? renderMenu(menu) : menu}
+        {renderExtraFooter?.()}
+      </PickerPopup>
+    );
+  };
 
-    const classes = merge(pickerClasses, {
-      [prefix`tag`]: multi,
-      [prefix`focused`]: open
-    });
-    const searching = !!searchKeyword && open;
-    const displaySearchInput = searchable && !disabled;
+  const { isValid, itemNode } = checkValue();
+  const tagElements = renderMultiValue();
 
-    const inputProps = multi
-      ? { inputStyle: { maxWidth: maxWidth - 63 }, as: InputAutosize }
-      : { as: 'input' };
+  /**
+   * 1.Have a value and the value is valid.
+   * 2.Regardless of whether the value is valid, as long as renderValue is set, it is judged to have a value.
+   * 3.If renderValue returns null or undefined, hasValue is false.
+   */
+  const hasSingleValue = !isNil(value) && isFunction(renderValue) && !isNil(itemNode);
+  const hasMultiValue =
+    isArray(value) && value.length > 0 && isFunction(renderValue) && !isNil(tagElements);
+  const hasValue = multi ? !!tagElements?.length || hasMultiValue : isValid || hasSingleValue;
 
-    if (plaintext) {
-      const plaintextProps: React.DetailsHTMLAttributes<HTMLDivElement> = {};
+  const [pickerClasses, usedClassNamePropKeys] = usePickerClassName({
+    ...props,
+    classPrefix,
+    appearance,
+    hasValue,
+    name: 'input',
+    cleanable
+  });
 
-      // TagPicker has -6px margin-left on the plaintext wrapper
-      // for fixing margin-left on tags from 2nd line on
-      if (multi) {
-        plaintextProps.style = {
-          marginLeft: -6
-        };
-      }
+  const classes = merge(pickerClasses, {
+    [prefix`tag`]: multi,
+    [prefix(`${multi ? 'tag' : 'input'}-${size}`)]: size,
+    [prefix`focused`]: open,
+    [prefix`disabled-options`]: disabledOptions
+  });
+  const searching = !!searchKeyword && open;
+  const editable = searchable && !disabled && !rest.loading;
 
-      return (
-        <Plaintext localeKey="notSelected" ref={targetRef} {...plaintextProps}>
-          {displayElement || (tagElements?.length ? tagElements : null)}
-        </Plaintext>
-      );
+  if (plaintext) {
+    const plaintextProps: PlaintextProps & StackProps = {};
+
+    // When multiple selection, the tag is displayed in a stack layout.
+    if (multi && hasValue) {
+      plaintextProps.as = Stack;
+      plaintextProps.spacing = 6;
+      plaintextProps.wrap = true;
+      plaintextProps.childrenRenderMode = 'clone';
     }
 
     return (
-      <PickerToggleTrigger
-        pickerProps={pick(props, pickTriggerPropKeys)}
-        ref={triggerRef}
-        trigger="active"
-        onEnter={createChainedFunction(handleEnter, onEnter)}
-        onEntered={createChainedFunction(onEntered, onOpen)}
-        onExit={createChainedFunction(handleExit, onExit)}
-        onExited={createChainedFunction(handleExited, onExited)}
-        speaker={renderDropdownMenu}
-        placement={placement}
-      >
-        <Component
-          className={classes}
-          style={style}
-          onClick={focusInput}
-          onKeyDown={onPickerKeyDown}
-        >
-          <PickerToggle
-            {...omit(rest, [...omitTriggerPropKeys, ...usedClassNamePropKeys])}
-            id={id}
-            readOnly={readOnly}
-            plaintext={plaintext}
-            ref={targetRef}
-            as={toggleAs}
-            tabIndex={null}
-            onClean={handleClean}
-            cleanable={cleanable && !disabled}
-            hasValue={hasValue}
-            active={open}
-            disabled={disabled}
-            placement={placement}
-            inputValue={value}
-          >
-            {searching || (multi && hasValue) ? null : displayElement || locale?.placeholder}
-          </PickerToggle>
-          {/* TODO Separate InputPicker and TagPicker implementation */}
-          {!(!multi && disabled) && (
-            <div className={prefix`tag-wrapper`}>
-              {tagElements}
-              {displaySearchInput && (
-                <InputSearch
-                  {...inputProps}
-                  tabIndex={tabIndex}
-                  readOnly={readOnly}
-                  onBlur={createChainedFunction(handleBlur, onBlur)}
-                  onFocus={createChainedFunction(handleFocus, onFocus)}
-                  inputRef={inputRef}
-                  onChange={handleSearch}
-                  value={open ? searchKeyword : ''}
-                />
-              )}
-            </div>
-          )}
-        </Component>
-      </PickerToggleTrigger>
+      <Plaintext localeKey="notSelected" ref={target} {...plaintextProps}>
+        {itemNode || (tagElements?.length ? tagElements : null) || placeholder}
+      </Plaintext>
     );
   }
-);
+
+  const placeholderNode = placeholder || (disabledOptions ? null : locale?.placeholder);
+
+  return (
+    <PickerToggleTrigger
+      id={id}
+      multiple={multi}
+      pickerProps={pick(props, pickTriggerPropKeys)}
+      ref={triggerRef}
+      trigger="active"
+      onEnter={createChainedFunction(handleEnter, onEnter)}
+      onEntered={onEntered}
+      onExit={createChainedFunction(handleExit, onExit)}
+      onExited={createChainedFunction(handleExited, onExited)}
+      speaker={renderPopup}
+      placement={placement}
+    >
+      <Component
+        className={classes}
+        style={style}
+        onClick={focus}
+        onKeyDown={onPickerKeyDown}
+        ref={root}
+      >
+        <PickerToggle
+          {...omit(rest, [...omitTriggerPropKeys, ...usedClassNamePropKeys])}
+          appearance={appearance}
+          readOnly={readOnly}
+          plaintext={plaintext}
+          ref={target}
+          as={toggleAs}
+          tabIndex={tabIndex}
+          onClean={handleClean}
+          cleanable={cleanable && !disabled}
+          hasValue={hasValue}
+          active={open}
+          disabled={disabled}
+          placement={placement}
+          inputValue={value}
+          focusItemValue={focusItemValue}
+          caret={!disabledOptions}
+          size={size}
+        >
+          {searching || (multi && hasValue) ? null : itemNode || placeholderNode}
+        </PickerToggle>
+        <TextBox
+          showTagList={hasValue && multi}
+          inputRef={inputRef}
+          inputValue={open ? searchKeyword : ''}
+          inputProps={inputProps}
+          tags={tagElements}
+          editable={editable}
+          readOnly={readOnly}
+          disabled={disabled}
+          multiple={multi}
+          onBlur={onBlur}
+          onFocus={handleFocus}
+          onChange={handleSearch}
+        />
+      </Component>
+    </PickerToggleTrigger>
+  );
+});
 
 InputPicker.displayName = 'InputPicker';
-InputPicker.defaultProps = defaultProps;
-InputPicker.propTypes = {
-  ...listPickerPropTypes,
-  locale: PropTypes.any,
-  appearance: PropTypes.oneOf(['default', 'subtle']),
-  cacheData: PropTypes.array,
-  menuAutoWidth: PropTypes.bool,
-  menuMaxHeight: PropTypes.number,
-  searchable: PropTypes.bool,
-  creatable: PropTypes.bool,
-  multi: PropTypes.bool,
-  groupBy: PropTypes.any,
-  sort: PropTypes.func,
-  renderMenu: PropTypes.func,
-  renderMenuItem: PropTypes.func,
-  renderMenuGroup: PropTypes.func,
-  onCreate: PropTypes.func,
-  onSelect: PropTypes.func,
-  onGroupTitleClick: PropTypes.func,
-  onSearch: PropTypes.func,
-  virtualized: PropTypes.bool,
-  searchBy: PropTypes.func,
-  tagProps: PropTypes.object
-};
 
 export default InputPicker;

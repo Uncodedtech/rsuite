@@ -1,11 +1,14 @@
 <!--start-code-->
 
 ```js
-const MyToggle = ({ label, checked, onChange }) => {
+import { Pagination, Toggle, SelectPicker, TagPicker, InputNumber } from 'rsuite';
+
+const Switch = ({ label, checked, onChange }) => {
   return (
     <span>
-      {label}：
-      <Toggle checked={checked} onChange={onChange} />
+      <Toggle checked={checked} onChange={onChange}>
+        {label}
+      </Toggle>
     </span>
   );
 };
@@ -27,15 +30,15 @@ const App = () => {
   const [limit, setLimit] = React.useState(50);
 
   return (
-    <div>
+    <>
       <div>
-        <MyToggle label="first" checked={first} onChange={setFirst} />
-        <MyToggle label="last" checked={last} onChange={setLast} />
-        <MyToggle label="prev" checked={prev} onChange={setPrev} />
-        <MyToggle label="next" checked={next} onChange={setNext} />
+        <Switch label="first" checked={first} onChange={setFirst} />
+        <Switch label="last" checked={last} onChange={setLast} />
+        <Switch label="prev" checked={prev} onChange={setPrev} />
+        <Switch label="next" checked={next} onChange={setNext} />
 
-        <MyToggle label="ellipsis" checked={ellipsis} onChange={setEllipsis} />
-        <MyToggle label="boundaryLinks" checked={boundaryLinks} onChange={setBoundaryLinks} />
+        <Switch label="ellipsis" checked={ellipsis} onChange={setEllipsis} />
+        <Switch label="boundaryLinks" checked={boundaryLinks} onChange={setBoundaryLinks} />
         <hr />
         <span>
           size：
@@ -127,11 +130,11 @@ const App = () => {
         onChangePage={setActivePage}
         onChangeLimit={setLimit}
       />
-    </div>
+    </>
   );
 };
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

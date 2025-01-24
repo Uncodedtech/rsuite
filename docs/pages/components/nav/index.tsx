@@ -1,45 +1,58 @@
 import React from 'react';
-import { Nav, Button, Row, Col, Slider } from 'rsuite';
+import { Nav, Button, Row, Col, Slider, VStack } from 'rsuite';
 import DefaultPage from '@/components/Page';
+import ImportGuide from '@/components/ImportGuide';
 import ResponsiveNav from '@rsuite/responsive-nav';
 import Link from 'next/link';
-import Home from '@rsuite/icons/legacy/Home';
-import FacebookSquare from '@rsuite/icons/legacy/FacebookSquare';
-import GithubAlt from '@rsuite/icons/legacy/GithubAlt';
-import Circle from '@rsuite/icons/legacy/Circle';
-import Chrome from '@rsuite/icons/legacy/Chrome';
-import EllipsisH from '@rsuite/icons/legacy/EllipsisH';
-import Dropbox from '@rsuite/icons/legacy/Dropbox';
-import Firefox from '@rsuite/icons/legacy/Firefox';
-import Gitlab from '@rsuite/icons/legacy/Gitlab';
-import Linux from '@rsuite/icons/legacy/Linux';
-import More from '@rsuite/icons/More';
-import Star from '@rsuite/icons/legacy/Star';
+
+import HomeIcon from '@rsuite/icons/legacy/Home';
+import FacebookSquareIcon from '@rsuite/icons/legacy/FacebookSquare';
+import GithubAltIcon from '@rsuite/icons/legacy/GithubAlt';
+import CircleIcon from '@rsuite/icons/legacy/Circle';
+import ChromeIcon from '@rsuite/icons/legacy/Chrome';
+import EllipsisHIcon from '@rsuite/icons/legacy/EllipsisH';
+import DropboxIcon from '@rsuite/icons/legacy/Dropbox';
+import FirefoxIcon from '@rsuite/icons/legacy/Firefox';
+import GitlabIcon from '@rsuite/icons/legacy/Gitlab';
+import LinuxIcon from '@rsuite/icons/legacy/Linux';
+import MoreIcon from '@rsuite/icons/More';
+import StarIcon from '@rsuite/icons/legacy/Star';
+
+const sandboxDependencies = {
+  '@rsuite/responsive-nav': 'latest'
+};
+
+const inDocsComponents = {
+  'import-guide': () => <ImportGuide components={['Nav']} />
+};
 
 export default function Page() {
   return (
     <DefaultPage
+      inDocsComponents={inDocsComponents}
       dependencies={{
         Nav,
         Button,
         Row,
         Col,
         Slider,
+        VStack,
         ResponsiveNav,
-        Home,
+        HomeIcon,
         Link,
-        FacebookSquare,
-        GithubAlt,
-        Circle,
-        Chrome,
-        EllipsisH,
-        Dropbox,
-        Firefox,
-        Gitlab,
-        Linux,
-        More,
-        Star
+        FacebookSquareIcon,
+        GithubAltIcon,
+        CircleIcon,
+        ChromeIcon,
+        EllipsisHIcon,
+        DropboxIcon,
+        FirefoxIcon,
+        GitlabIcon,
+        LinuxIcon,
+        MoreIcon,
+        StarIcon
       }}
+      sandboxDependencies={sandboxDependencies}
     />
   );
 }

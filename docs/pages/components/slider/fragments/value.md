@@ -1,11 +1,13 @@
 <!-- start-code -->
 
 ```js
+import { Slider, RangeSlider, Row, Col, InputGroup, InputNumber } from 'rsuite';
+
 function Example1() {
   const [value, setValue] = React.useState(0);
   return (
     <Row>
-      <Col md={10}>
+      <Col md={10} xs={12}>
         <Slider
           progress
           style={{ marginTop: 16 }}
@@ -15,7 +17,7 @@ function Example1() {
           }}
         />
       </Col>
-      <Col md={4}>
+      <Col md={4} xs={12}>
         <InputNumber
           min={0}
           max={100}
@@ -33,7 +35,7 @@ function Example2() {
   const [value, setValue] = React.useState([10, 50]);
   return (
     <Row>
-      <Col md={10}>
+      <Col md={10} xs={12}>
         <RangeSlider
           progress
           style={{ marginTop: 16 }}
@@ -43,7 +45,7 @@ function Example2() {
           }}
         />
       </Col>
-      <Col md={8}>
+      <Col md={8} xs={12}>
         <InputGroup>
           <InputNumber
             min={0}
@@ -78,10 +80,11 @@ function Example2() {
 
 function Example3() {
   const [value, setValue] = React.useState([10, 100]);
+
   return (
     <Row>
       <p>Fixed end value</p>
-      <Col md={10}>
+      <Col md={10} xs={12}>
         <RangeSlider
           progress
           style={{ marginTop: 16 }}
@@ -91,7 +94,7 @@ function Example3() {
           }}
         />
       </Col>
-      <Col md={8}>
+      <Col md={8} xs={12}>
         <InputGroup>
           <InputNumber
             min={0}
@@ -113,17 +116,17 @@ function Example3() {
   );
 }
 
-const instance = (
-  <div>
+const App = () => (
+  <>
     <Example1 />
     <hr />
     <Example2 />
     <hr />
     <Example3 />
-  </div>
+  </>
 );
 
-ReactDOM.render(instance);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!-- end-code -->

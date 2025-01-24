@@ -1,10 +1,10 @@
 # Whisper 弹窗触发器
 
-为一个元素绑定事件，触发后显示一个浮层。
+`Whisper` 组件用于显示浮动元素。它通常与 `Tooltip` 和 `Popover` 组件一起使用。
 
 ## 获取组件
 
-<!--{include:(components/whisper/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
 ## 演示
 
@@ -15,3 +15,4 @@
 ## Props
 
 <!--{include:(components/whisper/zh-CN/props.md)}-->
+<!--{include:(_common/types/placement-all.md)}-->

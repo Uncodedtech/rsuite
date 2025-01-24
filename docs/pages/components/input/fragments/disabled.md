@@ -1,30 +1,29 @@
 <!--start-code-->
 
 ```js
-const styles = {
-  width: 300,
-  marginBottom: 10
-};
+import { Input, InputGroup, Stack } from 'rsuite';
+import SearchIcon from '@rsuite/icons/Search';
 
-const instance = (
-  <div>
+const App = () => (
+  <Stack spacing={10} direction="column" alignItems="flex-start">
     <label>Disabled:</label>
-    <Input disabled style={styles} value="A piece of text for demonstration." />
-    <InputGroup disabled style={styles}>
+    <Input disabled value="A piece of text for demonstration." />
+    <InputGroup disabled>
       <Input value="A piece of text for demonstration." />
       <InputGroup.Addon>
-        <Search />
+        <SearchIcon />
       </InputGroup.Addon>
     </InputGroup>
-    <hr />
+
     <label>Read only:</label>
-    <Input readOnly style={styles} value="A piece of text for demonstration." />
-    <hr />
+    <Input readOnly value="A piece of text for demonstration." />
+
     <label>Plaintext:</label>
-    <Input plaintext style={styles} value="A piece of text for demonstration." />
-  </div>
+    <Input plaintext value="A piece of text for demonstration." />
+  </Stack>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

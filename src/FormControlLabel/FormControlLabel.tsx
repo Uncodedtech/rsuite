@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
-import PropTypes from 'prop-types';
-import { useClassNames } from '../utils';
-import { FormGroupContext } from '../FormGroup/FormGroup';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import React from 'react';
+import { useClassNames } from '@/internals/hooks';
+import { forwardRef } from '@/internals/utils';
+import { useCustom } from '../CustomProvider';
+import { useFormGroup } from '../FormGroup';
+import type { WithAsProps } from '@/internals/types';
 
 export interface FormControlLabelProps
   extends WithAsProps,
@@ -11,37 +12,30 @@ export interface FormControlLabelProps
   htmlFor?: string;
 }
 
-const FormControlLabel: RsRefForwardingComponent<'label', FormControlLabelProps> = React.forwardRef(
+/**
+ * The `<Form.ControlLabel>` component renders a label with required indicator, for form controls.
+ * @see https://rsuitejs.com/components/form/
+ */
+const FormControlLabel = forwardRef<'label', FormControlLabelProps>(
   (props: FormControlLabelProps, ref) => {
+    const { propsWithDefaults } = useCustom('FormControlLabel', props);
+    const { labelId, controlId } = useFormGroup();
     const {
       as: Component = 'label',
       classPrefix = 'form-control-label',
-      htmlFor,
+      htmlFor = controlId,
       className,
+      id = labelId,
       ...rest
-    } = props;
+    } = propsWithDefaults;
 
-    const { controlId } = useContext(FormGroupContext);
     const { withClassPrefix, merge } = useClassNames(classPrefix);
     const classes = merge(className, withClassPrefix());
 
-    return (
-      <Component
-        id={controlId ? `${controlId}-control-label` : null}
-        htmlFor={htmlFor || controlId}
-        {...rest}
-        ref={ref}
-        className={classes}
-      />
-    );
+    return <Component id={id} htmlFor={htmlFor} {...rest} ref={ref} className={classes} />;
   }
 );
 
 FormControlLabel.displayName = 'FormControlLabel';
-FormControlLabel.propTypes = {
-  className: PropTypes.string,
-  htmlFor: PropTypes.string,
-  classPrefix: PropTypes.string
-};
 
 export default FormControlLabel;

@@ -1,12 +1,15 @@
 <!--start-code-->
 
 ```js
-const instance = (
-  <div style={{ width: 160 }}>
+import { InputNumber, Stack } from 'rsuite';
+
+const App = () => (
+  <Stack>
     <InputNumber step={10} />
-  </div>
+  </Stack>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

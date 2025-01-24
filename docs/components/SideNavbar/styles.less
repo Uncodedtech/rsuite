@@ -18,7 +18,7 @@
     &.media-sidebar-show {
       visibility: visible;
       pointer-events: all;
-      animation: slideInLeft 0.3s ease-in-out;
+      animation: slide-in-left 0.3s ease-in-out;
       left: 0;
       z-index: 999;
     }
@@ -51,8 +51,11 @@
   }
 }
 
-.rs-theme-dark .rs-sidebar-wrapper.fixed {
-  background-color: #1a1d24;
+.rs-theme-dark,
+.rs-theme-high-contrast {
+  .rs-sidebar-wrapper.fixed {
+    background-color: #1a1d24;
+  }
 }
 
 .rs-sidebar-media-backdrop {
@@ -87,26 +90,32 @@
   bottom: 20px;
   left: 0;
   right: 0;
-  top: 80px;
+  top: 60px;
   padding: 0 10px;
 
-  a {
+  .rs-nav-item {
     font-weight: 400;
     color: inherit;
     transition: none;
-    border-radius: 2px;
-    padding-left: 20px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .rs-nav-item-active {
+    color: var(--rs-navs-selected);
+    font-weight: bold;
   }
 
   .title-zh {
     font-size: 12px;
-    margin-left: 4px;
+    line-height: 14px;
     opacity: 0.5;
   }
   .rs-nav-item-panel {
-    padding: 20px 12px 12px 12px;
-    color: #aaa;
-    border-bottom: 1px solid var(--rs-border-primary);
+    padding: 12px;
+    color: var(--rs-text-tertiary);
+    text-transform: uppercase;
   }
 
   // Scrollbar
@@ -131,33 +140,41 @@
   }
 }
 
-.app-container.night {
-  min-width: 1000px;
-  .rs-sidebar-wrapper {
-    background: rgba(242, 242, 242, 0.7);
-  }
-
-  .rs-nav.nav-docs {
-    a {
-      &:hover {
-        background: #eee !important;
-      }
-    }
-    .rs-nav-item-content:focus {
-      background: #eee !important;
-    }
-    .rs-nav-item-active a {
-      color: var(--rs-text-link);
-      font-weight: bold;
-    }
-    .rs-nav-item-panel {
-      color: #999;
-    }
-  }
-}
-
 .submenu-close {
   .rs-nav.nav-docs {
     overflow: hidden;
+  }
+}
+
+.nav-group {
+  .nav-title {
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    border-radius: 6px;
+    &:hover {
+      background: var(--rs-navs-bg-hover);
+    }
+  }
+
+  .nav-group-children {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.2s ease;
+    border-top: 1px solid var(--rs-border-primary);
+  }
+
+  .nav-icon {
+    transition: transform 0.2s ease;
+    transform: rotate(90deg);
+  }
+
+  &.expanded {
+    .nav-icon {
+      transform: rotate(0deg);
+    }
+    .nav-group-children {
+      max-height: 1000px;
+    }
   }
 }

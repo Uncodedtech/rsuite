@@ -6,16 +6,30 @@ name: Node.js CI
 on:
   push:
     branches:
-      - master
+      - main
       - next
       - v4
+      - '*.x'
   pull_request:
     branches:
-      - master
+      - main
       - next
       - v4
+      - '*.x'
 
 jobs:
+  lint:
+    name: 'Lint'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 'lts/*'
+      - run: npm ci --legacy-peer-deps
+      - run: npm run format:check
+      - run: npm run lint
+
   test:
     name: 'Test'
 
@@ -24,29 +38,46 @@ jobs:
     strategy:
       matrix:
         browser: [ChromeCi, Firefox]
+        react: ['React18', 'React19']
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Setup kernel, increase watchers
         run: echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf && sudo sysctl -p
 
-      - name: Use Node.js 12.x
-        uses: actions/setup-node@v1
+      - name: Use Node.js LTS
+        uses: actions/setup-node@v4
         with:
-          node-version: '12.x'
+          node-version: 'lts/*'
       - name: Cache Node.js modules
-        uses: actions/cache@v1
+        uses: actions/cache@v4
         with:
           path: ~/.npm # npm cache files are stored in `~/.npm` on Linux/macOS
           key: ${{ runner.OS }}-node-${{ hashFiles('**/package-lock.json') }}
           restore-keys: |
             ${{ runner.OS }}-node-
             ${{ runner.OS }}-
+
       - name: Install dependencies
-        run: npm ci
+        run: npm install --legacy-peer-deps
+
+      - name: install react 18
+        if: ${{ matrix.react == 'React18' }}
+        run: npm run install:react-18
+
+      - name: install react 19
+        if: ${{ matrix.react == 'React19' }}
+        run: npm run install:react-19
+
       - name: Run headless tests
         run: xvfb-run --auto-servernum npm test
         env:
           CI: true
           BROWSER: ${{ matrix.browser }}
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4.2.0
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          flags: ${{ matrix.browser }}

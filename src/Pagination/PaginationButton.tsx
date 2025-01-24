@@ -1,14 +1,14 @@
-import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
-import Ripple from '../Ripple';
-import { useClassNames, createChainedFunction } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import React from 'react';
+import Ripple from '@/internals/Ripple';
+import { useClassNames, useEventCallback } from '@/internals/hooks';
+import { forwardRef, createChainedFunction } from '@/internals/utils';
+import type { WithAsProps } from '@/internals/types';
 
-export interface PaginationButtonProps
+export interface PaginationButtonProps<T = number | string>
   extends WithAsProps,
-    Omit<React.HTMLAttributes<HTMLUListElement>, 'onSelect'> {
+    Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onSelect'> {
   /** The value of the current option */
-  eventKey?: number | string;
+  eventKey: T;
 
   /** Called when the button is clicked. */
   onClick?: React.MouseEventHandler;
@@ -23,24 +23,16 @@ export interface PaginationButtonProps
   children?: React.ReactNode;
 
   /** Select the callback function for the current option  */
-  onSelect?: (eventKey: number | string, event: React.MouseEvent) => void;
+  onSelect?: (eventKey: T, event: React.MouseEvent) => void;
 }
 
-const defaultProps: Partial<PaginationButtonProps> = {
-  classPrefix: 'pagination-btn',
-  as: 'button'
-};
-
-const PaginationButton: RsRefForwardingComponent<
-  'button',
-  PaginationButtonProps
-> = React.forwardRef((props: PaginationButtonProps, ref) => {
+const PaginationButton = forwardRef<'button', PaginationButtonProps>((props, ref) => {
   const {
-    as: Component,
+    as: Component = 'button',
     active,
     disabled,
     className,
-    classPrefix,
+    classPrefix = 'pagination-btn',
     children,
     eventKey,
     style,
@@ -52,15 +44,12 @@ const PaginationButton: RsRefForwardingComponent<
   const { merge, withClassPrefix } = useClassNames(classPrefix);
   const classes = merge(className, withClassPrefix({ active, disabled }));
 
-  const handleClick = useCallback(
-    (event: React.MouseEvent) => {
-      if (disabled) {
-        return;
-      }
-      onSelect?.(eventKey, event);
-    },
-    [disabled, eventKey, onSelect]
-  );
+  const handleClick = useEventCallback((event: React.MouseEvent) => {
+    if (disabled) {
+      return;
+    }
+    onSelect?.(eventKey, event);
+  });
 
   const asProps: Partial<PaginationButtonProps> = {};
 
@@ -86,19 +75,5 @@ const PaginationButton: RsRefForwardingComponent<
 });
 
 PaginationButton.displayName = 'PaginationButton';
-PaginationButton.defaultProps = defaultProps;
-PaginationButton.propTypes = {
-  classPrefix: PropTypes.string,
-  eventKey: PropTypes.any,
-  onSelect: PropTypes.func,
-  onClick: PropTypes.func,
-  disabled: PropTypes.bool,
-  active: PropTypes.bool,
-  className: PropTypes.string,
-  as: PropTypes.elementType,
-  children: PropTypes.node,
-  style: PropTypes.object,
-  renderItem: PropTypes.func
-};
 
 export default PaginationButton;

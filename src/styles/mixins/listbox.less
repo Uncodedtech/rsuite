@@ -6,8 +6,9 @@
 // .item {
 //   .listbox-option();
 //
-//   &:hover {
-//     .listbox-option-hover();
+//   &:hover,
+//   &:focus {
+//     .listbox-option-active();
 //   }
 //
 //   &-selected {
@@ -18,6 +19,7 @@
 //     .listbox-option-disabled();
 //   }
 // }
+@import 'color-modes';
 
 .listbox() {
   list-style: none;
@@ -31,28 +33,34 @@
   line-height: @line-height-base;
   color: var(--rs-text-primary);
   cursor: pointer;
-  transition: @picker-item-transition;
   text-decoration: none;
   width: 100%;
 }
 
-.listbox-option-hover() {
-  color: currentColor;
+// "-active" for aria-activedescendant
+.listbox-option-active() {
   background-color: var(--rs-listbox-option-hover-bg);
-}
+  color: var(--rs-listbox-option-hover-text);
 
-.listbox-option-focus() {
-  background-color: var(--rs-listbox-option-selected-bg);
-  font-weight: bold;
+  .high-contrast-mode({
+    .focus-ring(slim-inset);
+
+    color: var(--rs-listbox-option-hover-text);
+    text-decoration: underline;
+  });
 }
 
 .listbox-option-selected() {
-  .listbox-option-focus();
-
+  background-color: var(--rs-listbox-option-selected-bg);
+  font-weight: bold;
   color: var(--rs-listbox-option-selected-text);
+
+  .high-contrast-mode({
+    text-decoration: underline;
+  });
 }
 
-.listbox-options-disabled {
+.listbox-options-disabled() {
   color: var(--rs-listbox-option-disabled-text);
   background: none;
   cursor: not-allowed;

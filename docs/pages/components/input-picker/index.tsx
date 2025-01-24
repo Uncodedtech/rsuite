@@ -1,11 +1,41 @@
 import React from 'react';
-import { InputPicker, Button } from 'rsuite';
-import Spinner from '@rsuite/icons/legacy/Spinner';
-
+import { InputPicker, Button, VStack, HStack } from 'rsuite';
+import SpinnerIcon from '@rsuite/icons/legacy/Spinner';
 import DefaultPage from '@/components/Page';
-import useFetchData from '@/utils/useFetchData';
+import ImportGuide from '@/components/ImportGuide';
+import { FaUserGroup, FaUser } from 'react-icons/fa6';
+
+import { importFakerString, mockUsers, mockUsersString, sandboxFakerVersion } from '@/utils/mock';
+
+const mockfile = {
+  name: 'mock.js',
+  content: [importFakerString, mockUsersString].join('\n')
+};
+
+const sandboxDependencies = {
+  ...sandboxFakerVersion
+};
+
+const inDocsComponents = {
+  'import-guide': () => <ImportGuide components={['InputPicker']} />
+};
 
 export default function Page() {
-  const { response: data } = useFetchData('users-role');
-  return <DefaultPage dependencies={{ data, InputPicker, Button, Spinner }} />;
+  return (
+    <DefaultPage
+      inDocsComponents={inDocsComponents}
+      sandboxDependencies={sandboxDependencies}
+      sandboxFiles={[mockfile]}
+      dependencies={{
+        InputPicker,
+        Button,
+        VStack,
+        HStack,
+        SpinnerIcon,
+        mockUsers,
+        FaUserGroup,
+        FaUser
+      }}
+    />
+  );
 }

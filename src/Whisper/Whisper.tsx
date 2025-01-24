@@ -1,18 +1,22 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import OverlayTrigger from '../Overlay/OverlayTrigger';
-import { createChainedFunction, placementPolyfill, PLACEMENT } from '../utils';
-import { CustomConsumer } from '../CustomProvider';
-import { OverlayTriggerProps } from '../Overlay/OverlayTrigger';
+import OverlayTrigger, {
+  OverlayTriggerHandle,
+  OverlayTriggerProps
+} from '@/internals/Overlay/OverlayTrigger';
+import { createChainedFunction, placementPolyfill } from '@/internals/utils';
+import { useCustom } from '../CustomProvider';
 
 export type WhisperProps = OverlayTriggerProps;
+export type WhisperInstance = OverlayTriggerHandle;
 
-export interface WhisperInstance extends React.Component<WhisperProps> {
-  open: (delay?: number) => void;
-  close: (delay?: number) => void;
-}
-
-const Whisper = React.forwardRef((props: WhisperProps, ref) => {
+/**
+ * The `Whisper` component is used to display a floating element.
+ * It is usually used with the `Tooltip` and `Popover` components.
+ *
+ * @see https://rsuitejs.com/components/whisper
+ */
+const Whisper = React.forwardRef((props: WhisperProps, ref: React.Ref<WhisperInstance>) => {
+  const { propsWithDefaults, rtl } = useCustom('Whisper', props);
   const {
     onOpen,
     onClose,
@@ -21,34 +25,20 @@ const Whisper = React.forwardRef((props: WhisperProps, ref) => {
     placement = 'right',
     preventOverflow,
     ...rest
-  } = props;
+  } = propsWithDefaults;
+
   return (
-    <CustomConsumer>
-      {context => (
-        <OverlayTrigger
-          {...rest}
-          ref={ref}
-          preventOverflow={preventOverflow}
-          placement={placementPolyfill(placement, context?.rtl)}
-          onEntered={createChainedFunction(onOpen, onEntered)}
-          onExited={createChainedFunction(onClose, onExited)}
-        />
-      )}
-    </CustomConsumer>
+    <OverlayTrigger
+      {...rest}
+      ref={ref}
+      preventOverflow={preventOverflow}
+      placement={placementPolyfill(placement, rtl)}
+      onEntered={createChainedFunction(onOpen, onEntered)}
+      onExited={createChainedFunction(onClose as any, onExited)}
+    />
   );
 });
 
 Whisper.displayName = 'Whisper';
-Whisper.propTypes = {
-  onOpen: PropTypes.func,
-  onClose: PropTypes.func,
-  onEntered: PropTypes.func,
-  onExited: PropTypes.func,
-  placement: PropTypes.oneOf(PLACEMENT),
-  /**
-   * Prevent floating element overflow
-   */
-  preventOverflow: PropTypes.bool
-};
 
 export default Whisper;

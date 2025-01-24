@@ -1,29 +1,59 @@
 import React from 'react';
-import { Input, InputNumber, InputGroup, Whisper, Tooltip, Grid, Row, Col } from 'rsuite';
+import {
+  Input,
+  InputGroup,
+  Whisper,
+  Tooltip,
+  Grid,
+  Row,
+  Col,
+  MaskedInput,
+  SelectPicker,
+  ButtonToolbar,
+  Toggle,
+  FlexboxGrid,
+  Stack
+} from 'rsuite';
 import DefaultPage from '@/components/Page';
-import Search from '@rsuite/icons/Search';
-import Info from '@rsuite/icons/legacy/Info';
-import Avatar from '@rsuite/icons/legacy/Avatar';
-import Eye from '@rsuite/icons/legacy/Eye';
-import EyeSlash from '@rsuite/icons/legacy/EyeSlash';
+import ImportGuide from '@/components/ImportGuide';
+import SearchIcon from '@rsuite/icons/Search';
+import InfoRoundIcon from '@rsuite/icons/InfoRound';
+import EyeCloseIcon from '@rsuite/icons/EyeClose';
+import VisibleIcon from '@rsuite/icons/Visible';
+import { FaRegUserCircle } from 'react-icons/fa';
+
+const inDocsComponents = {
+  'import-guide': () => (
+    <ImportGuide
+      components={['Input', 'InputGroup', 'MaskedInput']}
+      hasCssComponents={['Input', 'InputGroup']}
+    />
+  )
+};
 
 export default function Page() {
   return (
     <DefaultPage
+      inDocsComponents={inDocsComponents}
       dependencies={{
         Input,
-        InputNumber,
         InputGroup,
         Whisper,
         Tooltip,
         Grid,
         Row,
         Col,
-        Search,
-        Info,
-        Avatar,
-        Eye,
-        EyeSlash,
+        SearchIcon,
+        InfoRoundIcon,
+        FaRegUserCircle,
+        EyeCloseIcon,
+        VisibleIcon,
+        MaskedInput,
+        SelectPicker,
+        ButtonToolbar,
+        Toggle,
+        FlexboxGrid,
+        Stack
       }}
     />
   );

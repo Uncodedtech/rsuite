@@ -1,83 +1,52 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-
-import Ripple from '../Ripple';
 import Button from '../Button';
-import { useClassNames } from '../utils';
-import { IconProps } from '@rsuite/icons/lib/Icon';
-import { WithAsProps, RsRefForwardingComponent, TypeAttributes } from '../@types/common';
-import useToggleCaret from '../utils/useToggleCaret';
+import { forwardRef } from '@/internals/utils';
+import { useClassNames, useToggleCaret } from '@/internals/hooks';
+import { IconProps } from '@rsuite/icons/Icon';
+import { WithAsProps, PlacementCorners } from '@/internals/types';
 
 export interface DropdownToggleProps extends WithAsProps {
   icon?: React.ReactElement<IconProps>;
   noCaret?: boolean;
-  renderTitle?: (children?: React.ReactNode) => React.ReactNode;
-  placement?: TypeAttributes.Placement8;
-  inSidenav?: boolean;
+  renderToggle?: (props: WithAsProps, ref: React.Ref<any>) => any;
+  placement?: PlacementCorners;
 }
 
-const defaultProps: Partial<DropdownToggleProps> = {
-  as: Button,
-  classPrefix: 'dropdown-toggle'
-};
+const DropdownToggle = forwardRef<typeof Button, DropdownToggleProps>(
+  (props: DropdownToggleProps, ref) => {
+    const {
+      as: Component = Button,
+      className,
+      classPrefix = 'dropdown-toggle',
+      renderToggle,
+      children,
+      icon,
+      noCaret,
+      placement = 'bottomStart',
+      ...rest
+    } = props;
 
-const DropdownToggle: RsRefForwardingComponent<
-  typeof Button,
-  DropdownToggleProps
-> = React.forwardRef((props: DropdownToggleProps, ref) => {
-  const {
-    as: Component,
-    className,
-    classPrefix,
-    renderTitle,
-    children,
-    icon,
-    noCaret,
-    placement,
-    inSidenav,
-    ...rest
-  } = props;
-  const { prefix, withClassPrefix, merge } = useClassNames(classPrefix);
-  const classes = merge(
-    className,
-    withClassPrefix({
-      'custom-title': typeof renderTitle === 'function'
-    })
-  );
+    const { prefix, withClassPrefix, merge } = useClassNames(classPrefix);
+    const classes = merge(className, withClassPrefix({ 'no-caret': noCaret }));
 
-  // Caret icon is down by default, when Dropdown is used in Sidenav.
-  const Caret = useToggleCaret(inSidenav ? 'bottomStart' : placement);
+    // Caret icon is down by default, when Dropdown is used in Sidenav.
+    const Caret = useToggleCaret(placement);
 
-  if (renderTitle) {
-    return (
+    const toggle = (
       <Component {...rest} ref={ref} className={classes}>
-        {renderTitle(children)}
-        <Ripple />
+        {icon &&
+          React.cloneElement(icon, {
+            className: prefix('icon')
+          })}
+        {children}
+        {noCaret ? null : <Caret className={prefix('caret')} />}
       </Component>
     );
+
+    return renderToggle ? renderToggle(rest, ref) : toggle;
   }
-
-  const buttonProps = Component === Button ? { appearance: 'subtle' } : null;
-
-  return (
-    <Component {...buttonProps} {...rest} ref={ref} className={classes}>
-      {icon}
-      {children}
-      {noCaret ? null : <Caret className={prefix('caret')} />}
-    </Component>
-  );
-});
+);
 
 DropdownToggle.displayName = 'DropdownToggle';
-DropdownToggle.defaultProps = defaultProps;
-DropdownToggle.propTypes = {
-  className: PropTypes.string,
-  children: PropTypes.node,
-  icon: PropTypes.node,
-  classPrefix: PropTypes.string,
-  noCaret: PropTypes.bool,
-  as: PropTypes.elementType,
-  renderTitle: PropTypes.func
-};
 
 export default DropdownToggle;

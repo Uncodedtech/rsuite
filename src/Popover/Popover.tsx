@@ -1,7 +1,9 @@
 import React from 'react';
-import PropTypes from 'prop-types';
-import { useClassNames } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import Heading from '../Heading';
+import { forwardRef } from '@/internals/utils';
+import { useClassNames } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import type { WithAsProps } from '@/internals/types';
 
 export interface PopoverProps extends WithAsProps {
   /** The title of the component. */
@@ -11,58 +13,53 @@ export interface PopoverProps extends WithAsProps {
   visible?: boolean;
 
   /** The content full the container */
-
   full?: boolean;
+
+  /** Whether show the arrow indicator */
+  arrow?: boolean;
 }
 
-const defaultProps: Partial<PopoverProps> = {
-  as: 'div',
-  classPrefix: 'popover'
-};
+/**
+ * The `Popover` component is used to display a popup window for a target component.
+ * @see https://rsuitejs.com/components/popover
+ */
+const Popover = forwardRef<'div', PopoverProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('Popover', props);
+  const {
+    as: Component = 'div',
+    classPrefix = 'popover',
+    title,
+    children,
+    style,
+    visible,
+    className,
+    full,
+    arrow = true,
+    ...rest
+  } = propsWithDefaults;
 
-const Popover: RsRefForwardingComponent<'div', PopoverProps> = React.forwardRef(
-  (props: PopoverProps, ref) => {
-    const {
-      as: Component,
-      classPrefix,
-      title,
-      children,
-      style,
-      visible,
-      className,
-      full,
-      ...rest
-    } = props;
+  const { withClassPrefix, merge, prefix } = useClassNames(classPrefix);
+  const classes = merge(className, withClassPrefix({ full }));
 
-    const { withClassPrefix, merge, prefix } = useClassNames(classPrefix);
-    const classes = merge(className, withClassPrefix({ full }));
+  const styles = {
+    display: 'block',
+    opacity: visible ? 1 : undefined,
+    ...style
+  };
 
-    const styles = {
-      display: 'block',
-      opacity: visible ? 1 : undefined,
-      ...style
-    };
-
-    return (
-      <Component role="dialog" {...rest} ref={ref} className={classes} style={styles}>
-        <div className={prefix`arrow`} aria-hidden />
-        {title && <h3 className={prefix`title`}>{title}</h3>}
-        <div className={prefix`content`}>{children}</div>
-      </Component>
-    );
-  }
-);
+  return (
+    <Component role="dialog" {...rest} ref={ref} className={classes} style={styles}>
+      {arrow && <div className={prefix`arrow`} aria-hidden />}
+      {title && (
+        <Heading level={3} className={prefix`title`}>
+          {title}
+        </Heading>
+      )}
+      <div className={prefix`content`}>{children}</div>
+    </Component>
+  );
+});
 
 Popover.displayName = 'Popover';
-Popover.defaultProps = defaultProps;
-Popover.propTypes = {
-  as: PropTypes.elementType,
-  classPrefix: PropTypes.string,
-  children: PropTypes.node,
-  title: PropTypes.node,
-  style: PropTypes.object,
-  visible: PropTypes.bool,
-  className: PropTypes.string,
-  full: PropTypes.bool
-};
+
 export default Popover;

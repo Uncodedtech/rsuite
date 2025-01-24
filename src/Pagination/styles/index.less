@@ -1,7 +1,9 @@
-@import '../../styles/common';
-@import (reference) '../../Button/styles/index';
-@import './pagination-group';
-@import 'mixin';
+@import '../../styles/common.less';
+@import '../../Button/styles/index.less';
+@import '../../Divider/styles/index.less';
+@import '../../SelectPicker/styles/index.less';
+@import './pagination-group.less';
+@import './mixin.less';
 
 //
 // Pagination (multiple pages)
@@ -86,7 +88,18 @@
     height: @line-height-computed;
   }
 
-  &-active {
+  .high-contrast-mode({
+    transition: none;
+    color: var(--rs-pagination-item-text);
+
+    &:hover,
+    &:focus-visible {
+      color: var(--rs-pagination-item-current-text);
+      text-decoration: underline;
+    }
+  });
+
+  &&-active {
     .pagination-active();
   }
 }

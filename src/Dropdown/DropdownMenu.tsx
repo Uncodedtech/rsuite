@@ -1,234 +1,208 @@
-import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import AngleLeft from '@rsuite/icons/legacy/AngleLeft';
-import AngleRight from '@rsuite/icons/legacy/AngleRight';
-import Collapse from '../Animation/Collapse';
+import React, { useCallback, useContext, useMemo } from 'react';
+import omit from 'lodash/omit';
+import Menu from '@/internals/Menu/Menu';
+import MenuItem from '@/internals/Menu/MenuItem';
+import Menubar from '@/internals/Menu/Menubar';
+import PagePreviousIcon from '@rsuite/icons/PagePrevious';
+import PageNextIcon from '@rsuite/icons/PageNext';
+import DropdownContext from './DropdownContext';
+import Nav from '../Nav';
+import NavContext from '../Nav/NavContext';
+import { useClassNames } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import { mergeRefs, warnOnce } from '@/internals/utils';
+import type { StandardProps } from '@/internals/types';
+import type { IconProps } from '@rsuite/icons/Icon';
 
-import DropdownMenuItem from './DropdownMenuItem';
-import Ripple from '../Ripple';
-import {
-  createChainedFunction,
-  ReactChildren,
-  shallowEqual,
-  mergeRefs,
-  useClassNames
-} from '../utils';
-
-import { IconProps } from '@rsuite/icons/lib/Icon';
-import { StandardProps } from '../@types/common';
-import useCustom from '../utils/useCustom';
-
-export interface DropdownMenuProps<T = string> extends StandardProps {
+export interface DropdownMenuProps<T = string | number> extends StandardProps {
   /** Define the title as a submenu */
   title?: React.ReactNode;
 
   /** The submenu expands from the left and defaults to the right */
   pullLeft?: boolean;
 
-  /** The value of the current option */
+  /**
+   *  Only used for setting the default expand state when it's a submenu.
+   */
   eventKey?: T;
 
   /** Set the icon */
   icon?: React.ReactElement<IconProps>;
 
   open?: boolean;
-  openKeys?: T[];
   collapsible?: boolean;
   expanded?: boolean;
   active?: boolean;
+  disabled?: boolean;
   activeKey?: T;
   trigger?: 'hover' | 'click';
-  onSelect?: (eventKey: T, event: React.SyntheticEvent<Element>) => void;
-  onToggle?: (eventKey: T, event: React.SyntheticEvent<Element>) => void;
+  onSelect?: (eventKey: T | undefined, event: React.SyntheticEvent) => void;
+  onToggle?: (eventKey: T | undefined, event: React.SyntheticEvent) => void;
 }
 
-const defaultProps: Partial<DropdownMenuProps> = {
-  openKeys: [],
-  classPrefix: 'dropdown-menu'
-};
-
-const DropdownMenu = React.forwardRef((props: DropdownMenuProps, ref) => {
+/**
+ * The `<Dropdown.Menu>` API
+ *
+ * @description
+ * Note the difference between this component and `<Menu>` component:
+ * `<Menu>` is used for ARIA menu control logic and is used internally only.
+ * This component is only used for supporting submenu syntax and is
+ * assigned to Dropdown.Menu
+ *
+ * @example
+ *
+ * <Dropdown>
+ *   <Dropdown.Item>Item 1</Dropdown.Item>
+ *   <Dropdown.Menu title="Submenu">
+ *     <Dropdown.Item>Sub item</Dropdown.Item>
+ *   </Dropdown.Menu>
+ * </Dropdown>
+ */
+const DropdownMenu = React.forwardRef<
+  HTMLElement,
+  DropdownMenuProps & Omit<React.HTMLAttributes<HTMLUListElement>, 'title' | 'onSelect'>
+>((props, ref) => {
   const {
-    children,
-    className,
-    classPrefix,
-    collapsible,
-    expanded,
-    activeKey,
-    openKeys,
-    onSelect,
     onToggle,
+    eventKey,
+    title,
+    activeKey,
+    onSelect,
+    classPrefix = 'dropdown-menu',
+    className,
+    children,
     ...rest
   } = props;
 
-  const { withClassPrefix, merge, prefix } = useClassNames(classPrefix);
-  const { rtl } = useCustom('DropdownMenu');
-  const handleToggleChange = useCallback(
-    (eventKey: string, event: React.MouseEvent) => {
+  const nav = useContext(NavContext);
+
+  const dropdown = useContext(DropdownContext);
+  const { rtl } = useCustom();
+
+  const handleToggleSubmenu = useCallback(
+    (_: boolean, event: React.SyntheticEvent) => {
       onToggle?.(eventKey, event);
     },
-    [onToggle]
+    [eventKey, onToggle]
   );
+  const { merge, prefix, withClassPrefix } = useClassNames(classPrefix);
 
-  const isActive = useCallback(
-    (props: DropdownMenuProps) => {
-      if (
-        props.active ||
-        (typeof activeKey !== 'undefined' && shallowEqual(props.eventKey, activeKey))
-      ) {
-        return true;
-      }
+  const { withClassPrefix: withMenuClassPrefix, merge: mergeMenuClassName } =
+    useClassNames('dropdown-menu');
 
-      if (ReactChildren.some(props.children, child => isActive(child.props))) {
-        return true;
-      }
+  const {
+    merge: mergeItemClassNames,
+    withClassPrefix: withItemClassPrefix,
+    prefix: prefixItemClassName
+  } = useClassNames('dropdown-item');
 
-      return props.active;
-    },
-    [activeKey]
-  );
+  const contextValue = useMemo(() => ({ activeKey, onSelect }), [activeKey, onSelect]);
 
-  const getMenuItemsAndStatus = (children?: React.ReactNode): { items: any[]; active: boolean } => {
-    let hasActiveItem: boolean;
+  // If rendered within a <Nav>
+  // Suggest <Nav.Menu>
+  if (nav) {
+    warnOnce('Usage of <Dropdown.Menu> within <Nav> is deprecated. Replace with <Nav.Menu>');
 
-    const items = React.Children.map(children, (item: any, index: number) => {
-      if (!item) {
-        return null;
-      }
+    return <Nav.Menu ref={ref} {...(props as any)} />;
+  }
 
-      const displayName = item?.type?.displayName;
-      let active: boolean;
-
-      if (displayName === 'DropdownMenuItem' || displayName === 'DropdownMenu') {
-        active = isActive(item.props);
-        if (active) {
-          hasActiveItem = true;
-        }
-      }
-
-      if (displayName === 'DropdownMenuItem') {
-        const { onSelect: onItemSelect } = item.props;
-        return React.cloneElement(item, {
-          key: index,
-          active,
-          onSelect: createChainedFunction(onSelect, onItemSelect)
-        });
-      } else if (displayName === 'DropdownMenu') {
-        const itemsAndStatus = getMenuItemsAndStatus(item.props.children);
-        const { icon, open, trigger, pullLeft, eventKey, title, className } = item.props;
-        const expanded = openKeys.some(key => shallowEqual(key, eventKey));
-        const itemClassName = merge(
-          className,
-          prefix(`pull-${pullLeft ? 'left' : 'right'}`, {
-            'item-focus': isActive(item.props)
-          })
-        );
-        const Icon = (pullLeft && !rtl) || (rtl && !pullLeft) ? AngleLeft : AngleRight;
-
-        return (
-          <DropdownMenuItem
-            icon={icon}
-            open={open}
-            trigger={trigger}
-            expanded={expanded}
-            className={itemClassName}
-            pullLeft={pullLeft}
-            as="div"
-            submenu
-            role={null}
-          >
-            <div
-              className={prefix`toggle`}
-              onClick={e => handleToggleChange(eventKey, e)}
-              role="menu"
-              tabIndex={-1}
-            >
-              <span>{title}</span>
-              <Icon className={prefix`toggle-icon`} />
-              <Ripple />
-            </div>
-            {renderCollapse((transitionProps, ref) => {
-              const { className, ...transitionRestProps } = transitionProps || {};
-              return (
-                <div
-                  {...transitionRestProps}
-                  ref={ref}
-                  role="menu"
-                  className={merge(className, withClassPrefix())}
-                >
-                  {itemsAndStatus.items}
-                </div>
-              );
-            }, expanded)}
-          </DropdownMenuItem>
-        );
-      }
-
-      return item;
-    });
-
-    return {
-      items,
-      active: hasActiveItem
-    };
-  };
-
-  const renderCollapse = (children, expanded?: boolean) => {
-    return collapsible ? (
-      <Collapse
-        in={expanded}
-        exitedClassName={prefix`collapse-out`}
-        exitingClassName={prefix`collapsing`}
-        enteredClassName={prefix`collapse-in`}
-        enteringClassName={prefix`collapsing`}
-      >
-        {children}
-      </Collapse>
-    ) : (
-      children()
-    );
-  };
-
-  const { items, active } = getMenuItemsAndStatus(children);
-  const classes = merge(className, withClassPrefix({ active }));
-
-  return renderCollapse((transitionProps, transitionRef) => {
-    const { className: transitionClassName, ...transitionRestProps } = transitionProps || {};
+  // <Dropdown.Menu> is used outside of <Dropdown>
+  // renders a vertical `menubar`
+  if (!dropdown) {
+    const classes = merge(className, withClassPrefix());
 
     return (
-      <div
-        {...rest}
-        {...transitionRestProps}
-        className={classNames(classes, transitionClassName)}
-        role="menu"
-        ref={mergeRefs(transitionRef, ref)}
-      >
-        {items}
-      </div>
+      <DropdownContext.Provider value={contextValue}>
+        <Menubar vertical>
+          {(menubar, menubarRef: React.Ref<HTMLElement>) => (
+            <ul ref={mergeRefs(menubarRef, ref)} className={classes} {...menubar} {...rest}>
+              {children}
+            </ul>
+          )}
+        </Menubar>
+      </DropdownContext.Provider>
     );
-  }, expanded);
+  }
+
+  // Parent menu exists. This is a submenu.
+  // Should render a `menuitem` that controls this submenu.
+  const { icon, disabled, ...menuProps } = omit(rest, ['trigger']);
+
+  const Icon = rtl ? PagePreviousIcon : PageNextIcon;
+
+  return (
+    <Menu
+      openMenuOn={['mouseover', 'click']}
+      renderMenuButton={({ open, ...menuButtonProps }, buttonRef) => (
+        <MenuItem disabled={disabled}>
+          {({ selected, active, ...menuitem }, menuitemRef) => {
+            const classes = mergeItemClassNames(
+              className,
+              prefixItemClassName`toggle`,
+              withItemClassPrefix({
+                'with-icon': icon,
+                open,
+                active: selected,
+                disabled,
+                focus: active
+              })
+            );
+
+            return (
+              <div
+                ref={mergeRefs(buttonRef, menuitemRef as any)}
+                className={classes}
+                data-event-key={eventKey}
+                data-event-key-type={typeof eventKey}
+                {...(menuitem as any)}
+                {...omit(menuButtonProps, ['role'])}
+              >
+                {icon && React.cloneElement(icon, { className: prefix('menu-icon') })}
+                {title}
+                <Icon className={prefix`toggle-icon`} />
+              </div>
+            );
+          }}
+        </MenuItem>
+      )}
+      renderMenuPopup={({ open, ...popupProps }, popupRef) => {
+        const menuClassName = mergeMenuClassName(className, withMenuClassPrefix());
+
+        return (
+          <ul
+            ref={popupRef}
+            className={menuClassName}
+            hidden={!open}
+            {...popupProps}
+            {...menuProps}
+          >
+            {children}
+          </ul>
+        );
+      }}
+      onToggleMenu={handleToggleSubmenu}
+    >
+      {({ open, ...menuContainer }, menuContainerRef) => {
+        const classes = mergeItemClassNames(
+          className,
+          withItemClassPrefix({
+            disabled,
+            open,
+            submenu: true
+          })
+        );
+        return (
+          <li
+            ref={mergeRefs(ref, menuContainerRef as any)}
+            className={classes}
+            {...(menuContainer as any)}
+          />
+        );
+      }}
+    </Menu>
+  );
 });
 
-DropdownMenu.displayName = 'DropdownMenu';
-DropdownMenu.defaultProps = defaultProps;
-DropdownMenu.propTypes = {
-  active: PropTypes.bool,
-  activeKey: PropTypes.any,
-  className: PropTypes.string,
-  children: PropTypes.node,
-  icon: PropTypes.any,
-  classPrefix: PropTypes.string,
-  pullLeft: PropTypes.bool,
-  title: PropTypes.node,
-  open: PropTypes.bool,
-  trigger: PropTypes.oneOf(['click', 'hover']),
-  eventKey: PropTypes.any,
-  openKeys: PropTypes.array,
-  expanded: PropTypes.bool,
-  collapsible: PropTypes.bool,
-  onSelect: PropTypes.func,
-  onToggle: PropTypes.func
-};
+DropdownMenu.displayName = 'Dropdown.Menu';
 
 export default DropdownMenu;

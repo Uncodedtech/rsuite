@@ -1,18 +1,15 @@
 <!--start-code-->
 
 ```js
-const styles = {
-  radioGroupLabel: {
-    padding: '8px 12px',
-    display: 'inline-block',
-    verticalAlign: 'middle'
-  }
-};
+import { Drawer, RadioGroup, Radio, ButtonToolbar, Button, Placeholder } from 'rsuite';
+
+const RadioLabel = ({ children }) => <label style={{ padding: 7 }}>{children}</label>;
+
 const App = () => {
   const [backdrop, setBackdrop] = React.useState('static');
   const [open, setOpen] = React.useState(false);
   return (
-    <div>
+    <>
       <RadioGroup
         name="radioList"
         appearance="picker"
@@ -20,7 +17,7 @@ const App = () => {
         value={backdrop}
         onChange={setBackdrop}
       >
-        <span style={styles.radioGroupLabel}>Backdrop: </span>
+        <RadioLabel>Backdrop: </RadioLabel>
         <Radio value="static">static</Radio>
         <Radio value={true}>true</Radio>
         <Radio value={false}>false</Radio>
@@ -41,14 +38,14 @@ const App = () => {
           </Drawer.Actions>
         </Drawer.Header>
         <Drawer.Body>
-          <Paragraph />
+          <Placeholder.Paragraph />
         </Drawer.Body>
       </Drawer>
-    </div>
+    </>
   );
 };
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

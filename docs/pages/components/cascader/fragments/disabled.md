@@ -1,33 +1,39 @@
 <!--start-code-->
 
 ```js
-/**
- * import data from
- * https://github.com/rsuite/rsuite/blob/master/docs/public/data/province-simplified.json
- */
+import { Cascader, VStack, HStack } from 'rsuite';
+import { mockTreeData } from './mock';
 
-const instance = (
-  <div>
-    <label>Disabled: </label>
-    <Cascader disabled defaultValue="1-1" data={data} style={{ widht: 224 }} />
+const data = mockTreeData({
+  limits: [3, 3, 4],
+  labels: (layer, value, faker) => {
+    const methodName = ['jobArea', 'jobType', 'firstName'];
+    return faker.person[methodName[layer]]();
+  }
+});
 
-    <label style={{ marginLeft: 10 }}>Disabled option: </label>
-    <Cascader
+const App = () => (
+  <VStack spacing={16}>
+    <Select label="Disabled" disabled defaultValue="1-1" data={data} />
+    <Select
+      label="Disabled option"
       data={data}
       defaultValue="1-1"
       disabledItemValues={['2', '1-1']}
-      style={{ widht: 224 }}
     />
-    <hr />
-    <label>Read only: </label>
-    <Cascader readOnly defaultValue="1-1" data={data} style={{ widht: 224 }} />
-
-    <hr />
-    <label>Plaintext: </label>
-    <Cascader plaintext defaultValue="1-1" data={data} style={{ widht: 224 }} />
-  </div>
+    <Select label="Read only" readOnly defaultValue="1-1" data={data} />
+    <Select label="Plaintext" plaintext defaultValue="1-1" data={data} />
+  </VStack>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
+
+const Select = ({ label, children, ...rest }) => (
+  <HStack>
+    <label style={{ width: 120 }}>{label}:</label>
+    <Cascader {...rest} style={{ width: 180 }} />
+  </HStack>
+);
 ```
 
 <!--end-code-->

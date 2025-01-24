@@ -1,7 +1,8 @@
-import React, { useCallback } from 'react';
-import PropTypes from 'prop-types';
-import { useClassNames, useControlled } from '../utils';
-import { WithAsProps } from '../@types/common';
+import React, { useMemo } from 'react';
+import { forwardRef } from '@/internals/utils';
+import { useClassNames, useControlled, useEventCallback } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import type { WithAsProps } from '@/internals/types';
 
 type KeyType = string | number;
 export interface PanelGroupProps<T = KeyType> extends WithAsProps {
@@ -21,73 +22,59 @@ export interface PanelGroupProps<T = KeyType> extends WithAsProps {
   children?: React.ReactNode;
 
   /** Toggles the callback function for the expand panel */
-  onSelect?: (eventKey: T, event: React.SyntheticEvent) => void;
+  onSelect?: (eventKey: T | undefined, event: React.SyntheticEvent) => void;
 }
-
-const defaultProps: Partial<PanelGroupProps> = {
-  as: 'div',
-  classPrefix: 'panel-group'
-};
 
 interface PanelGroupContext {
   accordion?: boolean;
   activeKey?: KeyType;
-  onGroupSelect?: (activeKey: KeyType, event: React.MouseEvent) => void;
+  onGroupSelect?: (activeKey: KeyType | undefined, event: React.MouseEvent) => void;
 }
 
 export const PanelGroupContext = React.createContext<PanelGroupContext>({});
 
-const PanelGroup = React.forwardRef((props: PanelGroupProps, ref) => {
+/**
+ * The `PanelGroup` component is used to display content that can be collapsed.
+ * @see https://rsuitejs.com/components/panel
+ */
+const PanelGroup = forwardRef<'div', PanelGroupProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('PanelGroup', props);
   const {
-    as: Component,
+    as: Component = 'div',
     accordion,
     defaultActiveKey,
     bordered,
     className,
-    classPrefix,
+    classPrefix = 'panel-group',
     children,
     activeKey: activeProp,
     onSelect,
     ...rest
-  } = props;
+  } = propsWithDefaults;
+
   const { withClassPrefix, merge } = useClassNames(classPrefix);
   const [activeKey, setActiveKey] = useControlled(activeProp, defaultActiveKey);
-  const classes = merge(
-    className,
-    withClassPrefix({
-      accordion,
-      bordered
-    })
-  );
+  const classes = merge(className, withClassPrefix({ accordion, bordered }));
 
-  const handleSelect = useCallback(
-    (activeKey: KeyType, event: React.MouseEvent) => {
+  const handleSelect = useEventCallback(
+    (activeKey: KeyType | undefined, event: React.MouseEvent) => {
       setActiveKey(activeKey);
       onSelect?.(activeKey, event);
-    },
-    [onSelect, setActiveKey]
+    }
+  );
+
+  const contextValue = useMemo(
+    () => ({ accordion, activeKey, onGroupSelect: handleSelect }),
+    [accordion, activeKey, handleSelect]
   );
 
   return (
-    <Component {...rest} ref={ref} role={accordion ? 'tablist' : undefined} className={classes}>
-      <PanelGroupContext.Provider value={{ accordion, activeKey, onGroupSelect: handleSelect }}>
-        {children}
-      </PanelGroupContext.Provider>
+    <Component {...rest} ref={ref} className={classes}>
+      <PanelGroupContext.Provider value={contextValue}>{children}</PanelGroupContext.Provider>
     </Component>
   );
 });
 
 PanelGroup.displayName = 'PanelGroup';
-PanelGroup.defaultProps = defaultProps;
-PanelGroup.propTypes = {
-  accordion: PropTypes.bool,
-  activeKey: PropTypes.any,
-  bordered: PropTypes.bool,
-  defaultActiveKey: PropTypes.any,
-  className: PropTypes.string,
-  children: PropTypes.node,
-  classPrefix: PropTypes.string,
-  onSelect: PropTypes.func
-};
 
 export default PanelGroup;

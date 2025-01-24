@@ -1,6 +1,6 @@
-import zhCN from 'date-fns/locale/zh-CN';
+import { zhCN } from 'date-fns/locale/zh-CN';
 
-const Calendar = {
+const DateTimeFormats = {
   sunday: '日',
   monday: '一',
   tuesday: '二',
@@ -11,18 +11,37 @@ const Calendar = {
   ok: '确定',
   today: '今天',
   yesterday: '昨天',
+  now: '此刻',
   hours: '时',
   minutes: '分',
   seconds: '秒',
   formattedMonthPattern: 'yyyy年MM月',
   formattedDayPattern: 'yyyy年MM月dd日',
-  dateLocale: zhCN
+  shortDateFormat: 'yyyy-MM-dd',
+  shortTimeFormat: 'aa hh:mm',
+  dateLocale: zhCN as any
+};
+
+const Combobox = {
+  noResultsText: '无匹配选项',
+  placeholder: '选择',
+  searchPlaceholder: '搜索',
+  checkAll: '全部'
+};
+
+const CreatableComboBox = {
+  ...Combobox,
+  newItem: '新选项',
+  createOption: '新建选项 "{0}"'
 };
 
 export default {
+  code: 'zh-CN',
   common: {
     loading: '加载中...',
-    emptyMessage: '数据为空'
+    emptyMessage: '数据为空',
+    remove: '移除',
+    clear: '清除'
   },
   Plaintext: {
     unfilled: '未填写',
@@ -39,31 +58,24 @@ export default {
     total: '共 {0} 条数据',
     skip: '跳至{0}页'
   },
-  Calendar,
-  DatePicker: {
-    ...Calendar
-  },
+  DateTimeFormats,
+  Calendar: DateTimeFormats,
+  DatePicker: DateTimeFormats,
   DateRangePicker: {
-    ...Calendar,
+    ...DateTimeFormats,
     last7Days: '最近 7 天'
   },
-  Picker: {
-    noResultsText: '无匹配选项',
-    placeholder: '选择',
-    searchPlaceholder: '搜索',
-    checkAll: '全部'
-  },
-  InputPicker: {
-    newItem: '新选项',
-    createOption: '新建选项 "{0}"'
-  },
+  Combobox,
+  InputPicker: CreatableComboBox,
+  TagPicker: CreatableComboBox,
   Uploader: {
     inited: '初始状态',
     progress: '上传中',
     error: '上传出错',
     complete: '上传完成',
     emptyFile: '无文件',
-    upload: '上传'
+    upload: '上传',
+    removeFile: '删除文件'
   },
   CloseButton: {
     closeLabel: '关闭'

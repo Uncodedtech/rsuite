@@ -1,31 +1,79 @@
-# Container 容器布局
+# Container 容器
 
-容器布局可以定义页面的主体框架。
-
-- `<Container>` 容器，用于组织布局结构。
-- `<Header>` 容器顶栏。
-- `<Content>` 内容部分。
-- `<Footer>` 底部。
-- `<Sidebar>` 侧边栏。
+用于布局和包装内容的容器组件。
 
 ## 获取组件
 
-<!--{include:(components/container/fragments/import.md)}-->
+<!--{include:<import-guide>}-->
 
-## 演示
+## 示例
 
-### 基础布局
+### 水平布局
 
-<!--{include:`basic.md`}-->
+<!--{include:<example-horizontal>}-->
 
-### 左侧导航布局
+### 右侧边栏
 
-<!--{include:`sidebar-page.md`}-->
+<!--{include:<example-right-sidebar>}-->
 
-### 顶部导航布局
+### 垂直布局
 
-<!--{include:`navbar-page.md`}-->
+<!--{include:<example-vertical>}-->
 
-### 登录页布局
+### 居中布局
 
-<!--{include:`login-page.md`}-->
+<!--{include:<example-center>}-->
+
+## Props
+
+### `<Container>`
+
+| 属性名称    | 类型 `(默认值)`           | 描述                 |
+| ----------- | ------------------------- | -------------------- |
+| as          | ElementType `('section')` | 为组件自定义元素类型 |
+| children    | ReactNode                 | 主要内容             |
+| classPrefix | string `('container')`    | 组件 CSS 类的前缀    |
+| className   | string                    | 自定义 CSS 类名      |
+| style       | CSSProperties             | 自定义样式           |
+
+### `<Header>`
+
+| 属性名称    | 类型 `(默认值)`          | 描述                 |
+| ----------- | ------------------------ | -------------------- |
+| as          | ElementType `('header')` | 为组件自定义元素类型 |
+| children    | ReactNode                | 主要内容             |
+| classPrefix | string `('header')`      | 组件 CSS 类的前缀    |
+| className   | string                   | 自定义 CSS 类名      |
+| style       | CSSProperties            | 自定义样式           |
+
+### `<Content>`
+
+| 属性名称    | 类型 `(默认值)`        | 描述                 |
+| ----------- | ---------------------- | -------------------- |
+| as          | ElementType `('main')` | 为组件自定义元素类型 |
+| children    | ReactNode              | 主要内容             |
+| classPrefix | string `('content')`   | 组件 CSS 类的前缀    |
+| className   | string                 | 自定义 CSS 类名      |
+| style       | CSSProperties          | 自定义样式           |
+
+### `<Footer>`
+
+| 属性名称    | 类型 `(默认值)`          | 描述                 |
+| ----------- | ------------------------ | -------------------- |
+| as          | ElementType `('footer')` | 为组件自定义元素类型 |
+| children    | ReactNode                | 主要内容             |
+| classPrefix | string `('footer')`      | 组件 CSS 类的前缀    |
+| className   | string                   | 自定义 CSS 类名      |
+| style       | CSSProperties            | 自定义样式           |
+
+### `<Sidebar>`
+
+| 属性名称    | 类型 `(默认值)`         | 描述                 |
+| ----------- | ----------------------- | -------------------- |
+| as          | ElementType `('aside')` | 为组件自定义元素类型 |
+| children    | ReactNode               | 主要内容             |
+| classPrefix | string `('sidebar')`    | 组件 CSS 类的前缀    |
+| className   | string                  | 自定义 CSS 类名      |
+| collapsible | boolean                 | 是否可折叠           |
+| style       | CSSProperties           | 自定义样式           |
+| width       | number                  | 侧边栏宽度           |

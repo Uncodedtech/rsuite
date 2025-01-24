@@ -1,48 +1,51 @@
-@import '~react-code-view/lib/less/index';
+@import '~react-code-view/styles/react-code-view.css';
 
-.doc-highlight {
-  background-color: #f5f5f5;
+.rcv-highlight {
+  position: relative;
+  background-color: @doc-highlight-bg;
   padding: 10px;
   margin: 1em 0;
+  border-radius: 6px;
   pre {
     margin: 0;
   }
-  code {
+  code,
+  .hljs-title {
     padding: 0 !important;
     margin: 0 !important;
-    color: var(--rs-text-primary) !important;
   }
 
-  .rs-theme-dark & {
-    background-color: #1e1e1e;
+  .rs-theme-dark &,
+  .rs-theme-high-contrast & {
+    background-color: @doc-highlight-bg;
   }
 }
 
-code:not(.doc-highlight) {
+code:not(.rcv-highlight) {
   border-radius: 2px;
-  color: #e96900;
   font-size: 0.8rem;
   margin: 0 2px;
   padding: 3px 5px;
   white-space: pre-wrap;
-  background-color: @doc-highlight-bg;
   font-family: Roboto Mono, Monaco, courier, monospace;
 
-  .rs-theme-dark & {
-    background-color: #1e1e1e;
-  }
+  color: rgb(236, 80, 96);
+}
+
+code.bash {
+  background-color: @doc-highlight-bg;
+  color: #eee;
 }
 
 a code {
-  color: var(--rs-primary-500) !important;
   background: none !important;
 }
 
-.code-view .rs-btn-toolbar + .rs-btn-toolbar {
+.rcv-render .rs-btn-toolbar + .rs-btn-toolbar {
   margin-top: 10px;
 }
 
-.code-view .rs-btn-toggle {
+.rcv-render .rs-toggle {
   margin-right: 8px;
   .rs-icon {
     width: 14px;
@@ -50,71 +53,88 @@ a code {
   }
 }
 
-.code-view > div > .tree-view {
+.rcv-render > div > .tree-view {
   border: 1px solid #eee;
 }
 
-.code-view .field p {
+.rcv-render .field p {
   line-height: 32px;
 }
 
-.code-view-wrapper {
+.rcv-container {
   transition: 0.3s linear border-color;
   margin: 18px 0;
   padding: 0;
   border-color: @code-view-wrapper-border-color;
   background-color: @code-view-wrapper-bg;
-  border-radius: 4px;
-
-  &:hover {
-    border: 1px dashed var(--rs-primary-500);
-  }
+  border-radius: 6px;
 
   .CodeMirror {
     margin: 0;
+    background-color: @doc-highlight-bg;
+  }
+  .CodeMirror-gutters {
+    background-color: @doc-highlight-bg;
   }
 
   hr {
     border-top-color: var(--rs-border-primary);
   }
 
-  .code-view-toolbar {
+  .rcv-toolbar {
     padding: 8px;
     border-color: @code-view-wrapper-border-color;
 
-    > .rs-btn {
+    .rs-btn {
       font-size: 0;
       line-height: 16px;
-      padding: 10px;
+      margin: 0 2px;
 
       .rs-icon {
         font-size: 16px;
       }
     }
   }
-  .code-view-error {
+  .rcv-render-error {
     max-height: 200px;
   }
 
-  .code-view {
+  .rcv-render {
     padding: 18px;
   }
 
-  .rs-theme-dark & {
+  .rs-theme-dark &,
+  .rs-theme-high-contrast & {
     border-color: #1a1d24;
 
-    .code-view-toolbar {
+    .rcv-toolbar {
       border-color: #1a1d24;
     }
   }
 }
 
-.code-view .rs-badge ~ .rs-badge {
-  margin-left: 20px;
-}
-
-.code-view .notification-container {
+.rcv-render .notification-container {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
+}
+
+.rcv-editor {
+  border-radius: 0 0 6px 6px;
+}
+
+.copy-code-button {
+  position: absolute;
+  color: #858b94;
+}
+
+.rcv-editor .copy-code-button {
+  right: 8px;
+  top: 8px;
+  z-index: 1;
+}
+
+.rcv-highlight .copy-code-button {
+  right: 8px;
+  top: 8px;
 }

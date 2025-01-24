@@ -1,12 +1,14 @@
 import React, { useCallback, useRef, useImperativeHandle, useReducer, useEffect } from 'react';
-import PropTypes from 'prop-types';
 import find from 'lodash/find';
 import FileItem from './UploadFileItem';
-import UploadTrigger, { UploadTriggerInstance } from './UploadTrigger';
-import { ajaxUpload, useClassNames, useCustom, guid } from '../utils';
-import { WithAsProps } from '../@types/common';
-import Plaintext from '../Plaintext';
-import { UploaderLocale } from '../locales';
+import Plaintext from '@/internals/Plaintext';
+import ajaxUpload, { type ErrorStatus } from './utils/ajaxUpload';
+import UploadTrigger, { UploadTriggerInstance, UploadTriggerProps } from './UploadTrigger';
+import { forwardRef, guid } from '@/internals/utils';
+import { useClassNames, useWillUnmount, useEventCallback } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import type { WithAsProps } from '@/internals/types';
+import type { UploaderLocale } from '../locales';
 
 export interface FileType {
   /** File Name */
@@ -33,9 +35,16 @@ export interface UploaderInstance {
   start: (file?: FileType) => void;
 }
 
-export interface UploaderProps extends WithAsProps {
+export interface UploaderProps
+  extends WithAsProps,
+    Omit<UploadTriggerProps, 'onChange' | 'onError' | 'onProgress'> {
+  /**
+   * Custom ref for Uploader
+   */
+  ref?: React.Ref<UploaderInstance | undefined>;
+
   /** Uploading URL */
-  action?: string;
+  action: string;
 
   /** File types that can be accepted. See input accept Attribute */
   accept?: string;
@@ -55,21 +64,26 @@ export interface UploaderProps extends WithAsProps {
   /** Upload the parameters with */
   data?: any;
 
-  /** Allow multiple file uploads to be selected at a time */
-
+  /** Allow multiple file uploads */
   multiple?: boolean;
 
   /** Disabled upload button */
   disabled?: boolean;
+
+  /** Disabled file item */
+  disabledFileItem?: boolean;
+
+  /**
+   * If 'true', disable using a multipart form for file upload and instead stream the file.
+   * Some APIs (e.g. Amazon S3) may expect the file to be streamed rather than sent via a form. Defaults to false.
+   **/
+  disableMultipart?: boolean;
 
   /** Render the control as plain text */
   plaintext?: boolean;
 
   /** Make the control readonly */
   readOnly?: boolean;
-
-  /** Disabled file item */
-  disabledFileItem?: boolean;
 
   /** Upload the parameter name of the corresponding file */
   name?: string;
@@ -90,7 +104,7 @@ export interface UploaderProps extends WithAsProps {
   maxPreviewFileSize?: number;
 
   /** You can use a custom element for this component */
-  toggleAs?: React.ElementType | string;
+  toggleAs?: React.ElementType;
 
   /** Removable list file  */
   removable?: boolean;
@@ -104,6 +118,9 @@ export interface UploaderProps extends WithAsProps {
   /** Custom locale */
   locale?: UploaderLocale;
 
+  /** The http method of upload request	*/
+  method?: string;
+
   /** Allow the queue to be updated. After you select a file, update the checksum function before the upload file queue, and return false to not update */
   shouldQueueUpdate?: (
     fileList: FileType[],
@@ -114,46 +131,39 @@ export interface UploaderProps extends WithAsProps {
   shouldUpload?: (file: FileType) => boolean | Promise<boolean>;
 
   /** callback function that the upload queue has changed */
-  onChange?: (fileList: FileType[]) => void;
+  onChange?: (fileList: FileType[], event: React.ChangeEvent | React.MouseEvent) => void;
 
   /** The callback function that starts the upload file */
-  onUpload?: (file: FileType) => void;
+  onUpload?: (file: FileType, uploadData: any, xhr: XMLHttpRequest) => void;
 
   /** In the file list, for uploading failed files, click the callback function to upload */
   onReupload?: (file: FileType) => void;
 
   /** In the file list, click the callback function for the uploaded file */
-  onPreview?: (file: FileType, event: React.SyntheticEvent<any>) => void;
+  onPreview?: (file: FileType, event: React.SyntheticEvent) => void;
 
-  /** Upload callback function with erro */
+  /** Upload callback function with error */
   onError?: (
-    status: any,
+    status: ErrorStatus,
     file: FileType,
-    event: React.SyntheticEvent<any>,
+    event: ProgressEvent,
     xhr: XMLHttpRequest
   ) => void;
 
   /** callback function after successful upload */
-  onSuccess?: (
-    response: any,
-    file: FileType,
-    event: React.SyntheticEvent<any>,
-    xhr: XMLHttpRequest
-  ) => void;
+  onSuccess?: (response: any, file: FileType, event: ProgressEvent, xhr: XMLHttpRequest) => void;
 
   /** Callback functions that upload progress change */
-  onProgress?: (
-    percent: number,
-    file: FileType,
-    event: React.SyntheticEvent<any>,
-    xhr: XMLHttpRequest
-  ) => void;
+  onProgress?: (percent: number, file: FileType, event: ProgressEvent, xhr: XMLHttpRequest) => void;
 
   /** In the file list, click the callback function to delete a file */
   onRemove?: (file: FileType) => void;
 
   /** Custom render file information */
   renderFileInfo?: (file: FileType, fileElement: React.ReactNode) => React.ReactNode;
+
+  /** Custom render thumbnail */
+  renderThumbnail?: (file: FileType, thumbnail: React.ReactNode) => React.ReactNode;
 }
 
 // Define several states of the file during the upload process.
@@ -163,21 +173,6 @@ export interface FileProgressType {
   status?: FileStatusType;
   progress?: number;
 }
-
-const defaultProps: Partial<UploaderProps> = {
-  as: 'div',
-  classPrefix: 'uploader',
-  autoUpload: true,
-  timeout: 0,
-  name: 'file',
-  multiple: false,
-  disabled: false,
-  withCredentials: false,
-  data: {},
-  listType: 'text',
-  removable: true,
-  fileListVisible: true
-};
 
 const getFiles = (
   event: React.ChangeEvent<HTMLInputElement> | React.DragEvent<HTMLInputElement>
@@ -200,12 +195,11 @@ const createFile = (file: FileType) => {
   };
 };
 
-interface ActionType {
-  type: 'push' | 'remove' | 'updateFile' | 'init';
-  files?: FileType[];
-  fileKey?: string;
-  file?: FileType;
-}
+type ActionType =
+  | { type: 'push'; files: FileType[] }
+  | { type: 'remove'; fileKey: string | number }
+  | { type: 'updateFile'; file: FileType }
+  | { type: 'init'; files: FileType[] };
 
 function fileListReducer(files: FileType[], action: ActionType) {
   switch (action.type) {
@@ -237,10 +231,10 @@ function fileListReducer(files: FileType[], action: ActionType) {
 }
 
 const useFileList = (
-  defaultFileList = []
-): [React.RefObject<FileType[]>, (action: ActionType, callback?) => void] => {
+  defaultFileList: FileType[] = []
+): [React.MutableRefObject<FileType[]>, (action: ActionType, callback?) => void] => {
   const fileListRef = useRef<FileType[]>(defaultFileList.map(createFile));
-  const fileListUpdateCallback = useRef<(v: FileType[]) => void>();
+  const fileListUpdateCallback = useRef<((v: FileType[]) => void) | null>();
 
   const [fileList, dispatch] = useReducer(fileListReducer, fileListRef.current);
   fileListRef.current = fileList;
@@ -250,6 +244,10 @@ const useFileList = (
     fileListUpdateCallback.current = null;
   }, [fileList]);
 
+  useWillUnmount(() => {
+    fileListUpdateCallback.current = null;
+  });
+
   const dispatchCallback = useCallback((action: ActionType, callback) => {
     dispatch(action);
     fileListUpdateCallback.current = callback;
@@ -258,40 +256,50 @@ const useFileList = (
   return [fileListRef, dispatchCallback];
 };
 
-const Uploader = React.forwardRef((props: UploaderProps, ref) => {
+/**
+ * The `Uploader` component is used to upload files.
+ *
+ * @see https://rsuitejs.com/components/uploader
+ */
+const Uploader = forwardRef<'div', UploaderProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('Uploader', props);
+
   const {
-    as: Component,
-    classPrefix,
+    as: Component = 'div',
+    classPrefix = 'uploader',
     className,
-    listType,
+    listType = 'text',
     defaultFileList,
     fileList: fileListProp,
-    fileListVisible,
-    locale: localeProp,
+    fileListVisible = true,
+    locale,
     style,
     draggable,
-    name,
-    multiple,
-    disabled,
+    name = 'file',
+    multiple = false,
+    disabled = false,
     readOnly,
     plaintext,
     accept,
     children,
     toggleAs,
-    removable,
+    removable = true,
     disabledFileItem,
     maxPreviewFileSize,
-    autoUpload,
+    method = 'POST',
+    autoUpload = true,
     action,
     headers,
-    withCredentials,
-    timeout,
-    data,
+    withCredentials = false,
+    disableMultipart,
+    timeout = 0,
+    data = {},
     onRemove,
     onUpload,
     shouldUpload,
     shouldQueueUpdate,
     renderFileInfo,
+    renderThumbnail,
     onPreview,
     onChange,
     onSuccess,
@@ -299,10 +307,10 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
     onProgress,
     onReupload,
     ...rest
-  } = props;
+  } = propsWithDefaults;
+
   const { merge, withClassPrefix, prefix } = useClassNames(classPrefix);
   const classes = merge(className, withClassPrefix(listType, { draggable }));
-  const { locale } = useCustom<UploaderLocale>('Uploader', localeProp);
 
   const rootRef = useRef<HTMLDivElement>();
   const xhrs = useRef({});
@@ -328,7 +336,7 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
    * Clear the value in input.
    */
   const cleanInputValue = useCallback(() => {
-    trigger.current.clearInput();
+    trigger.current?.clearInput();
   }, []);
 
   /**
@@ -339,7 +347,7 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
    * @param xhr
    */
   const handleAjaxUploadSuccess = useCallback(
-    (file: FileType, response: any, event: React.SyntheticEvent<any>, xhr: XMLHttpRequest) => {
+    (file: FileType, response: any, event: ProgressEvent, xhr: XMLHttpRequest) => {
       const nextFile: FileType = {
         ...file,
         status: 'finished',
@@ -359,7 +367,7 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
    * @param xhr
    */
   const handleAjaxUploadError = useCallback(
-    (file: FileType, status: any, event: React.SyntheticEvent<any>, xhr: XMLHttpRequest) => {
+    (file: FileType, status: ErrorStatus, event: ProgressEvent, xhr: XMLHttpRequest) => {
       const nextFile: FileType = {
         ...file,
         status: 'error'
@@ -378,7 +386,7 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
    * @param xhr
    */
   const handleAjaxUploadProgress = useCallback(
-    (file: FileType, percent: number, event: React.SyntheticEvent<any>, xhr: XMLHttpRequest) => {
+    (file: FileType, percent: number, event: ProgressEvent, xhr: XMLHttpRequest) => {
       const nextFile: FileType = {
         ...file,
         status: 'uploading',
@@ -395,41 +403,32 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
    * Upload a single file.
    * @param file
    */
-  const handleUploadFile = useCallback(
-    (file: FileType) => {
-      const xhr = ajaxUpload({
-        name,
-        timeout,
-        headers,
-        data,
-        withCredentials,
-        file: file.blobFile,
-        url: action,
-        onError: handleAjaxUploadError.bind(null, file),
-        onSuccess: handleAjaxUploadSuccess.bind(null, file),
-        onProgress: handleAjaxUploadProgress.bind(null, file)
-      });
-
-      updateFileStatus({ ...file, status: 'uploading' });
-      xhrs.current[file.fileKey] = xhr;
-      onUpload?.(file);
-    },
-    [
-      action,
-      data,
-      handleAjaxUploadError,
-      handleAjaxUploadProgress,
-      handleAjaxUploadSuccess,
-      headers,
+  const handleUploadFile = useEventCallback((file: FileType) => {
+    const { xhr, data: uploadData } = ajaxUpload({
       name,
-      onUpload,
       timeout,
-      updateFileStatus,
-      withCredentials
-    ]
-  );
+      headers,
+      data,
+      method,
+      withCredentials,
+      disableMultipart,
+      file: file.blobFile as File,
+      url: action,
+      onError: handleAjaxUploadError.bind(null, file),
+      onSuccess: handleAjaxUploadSuccess.bind(null, file),
+      onProgress: handleAjaxUploadProgress.bind(null, file)
+    });
 
-  const handleAjaxUpload = useCallback(() => {
+    updateFileStatus({ ...file, status: 'uploading' });
+
+    if (file.fileKey) {
+      xhrs.current[file.fileKey] = xhr;
+    }
+
+    onUpload?.(file, uploadData, xhr);
+  });
+
+  const handleAjaxUpload = useEventCallback(() => {
     fileList.current.forEach(file => {
       const checkState = shouldUpload?.(file);
 
@@ -450,47 +449,52 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
     });
 
     cleanInputValue();
-  }, [cleanInputValue, fileList, handleUploadFile, shouldUpload]);
+  });
 
-  const handleUploadTriggerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const files: File[] = getFiles(event);
-    const newFileList: FileType[] = [];
+  const handleUploadTriggerChange = useEventCallback(
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const files: File[] = getFiles(event);
+      const newFileList: FileType[] = [];
 
-    Array.from(files).forEach((file: File) => {
-      newFileList.push({
-        blobFile: file,
-        name: file.name,
-        status: 'inited',
-        fileKey: guid()
+      Array.from(files).forEach((file: File) => {
+        newFileList.push({
+          blobFile: file,
+          name: file.name,
+          status: 'inited',
+          fileKey: guid()
+        });
       });
-    });
 
-    const nextFileList = [...fileList.current, ...newFileList];
-    const checkState = shouldQueueUpdate?.(nextFileList, newFileList);
+      const nextFileList = [...fileList.current, ...newFileList];
+      const checkState = shouldQueueUpdate?.(nextFileList, newFileList);
 
-    if (checkState === false) {
-      cleanInputValue();
-      return;
+      if (checkState === false) {
+        cleanInputValue();
+        return;
+      }
+
+      const upload = () => {
+        onChange?.(nextFileList, event);
+
+        if (rootRef.current) {
+          dispatch({ type: 'push', files: newFileList }, () => {
+            autoUpload && handleAjaxUpload();
+          });
+        }
+      };
+
+      if (checkState instanceof Promise) {
+        checkState.then(res => {
+          res && upload();
+        });
+        return;
+      }
+
+      upload();
     }
+  );
 
-    const upload = () => {
-      onChange?.(nextFileList);
-      dispatch({ type: 'push', files: newFileList }, () => {
-        autoUpload && handleAjaxUpload();
-      });
-    };
-
-    if (checkState instanceof Promise) {
-      checkState.then(res => {
-        res && upload();
-      });
-      return;
-    }
-
-    upload();
-  };
-
-  const handleRemoveFile = (fileKey: string) => {
+  const handleRemoveFile = useEventCallback((fileKey: string | number, event: React.MouseEvent) => {
     const file: any = find(fileList.current, f => f.fileKey === fileKey);
     const nextFileList = fileList.current.filter(f => f.fileKey !== fileKey);
 
@@ -501,23 +505,26 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
     dispatch({ type: 'remove', fileKey });
 
     onRemove?.(file);
-    onChange?.(nextFileList);
+    onChange?.(nextFileList, event);
     cleanInputValue();
-  };
+  });
 
-  const handleReupload = (file: FileType) => {
+  const handleReupload = useEventCallback((file: FileType) => {
     autoUpload && handleUploadFile(file);
     onReupload?.(file);
-  };
+  });
 
   // public API
-  const start = (file?: FileType) => {
-    if (file) {
-      handleUploadFile(file);
-      return;
-    }
-    handleAjaxUpload();
-  };
+  const start = useCallback(
+    (file?: FileType) => {
+      if (file) {
+        handleUploadFile(file);
+        return;
+      }
+      handleAjaxUpload();
+    },
+    [handleAjaxUpload, handleUploadFile]
+  );
 
   useImperativeHandle(ref, () => ({
     root: rootRef.current,
@@ -558,6 +565,7 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
             onReupload={handleReupload}
             onCancel={handleRemoveFile}
             renderFileInfo={renderFileInfo}
+            renderThumbnail={renderThumbnail}
             removable={removable && !readOnly && !plaintext}
             allowReupload={!readOnly && !plaintext}
           />
@@ -586,43 +594,5 @@ const Uploader = React.forwardRef((props: UploaderProps, ref) => {
 });
 
 Uploader.displayName = 'Uploader';
-Uploader.defaultProps = defaultProps;
-Uploader.propTypes = {
-  action: PropTypes.string,
-  accept: PropTypes.string,
-  autoUpload: PropTypes.bool,
-  children: PropTypes.node,
-  className: PropTypes.string,
-  classPrefix: PropTypes.string,
-  defaultFileList: PropTypes.array,
-  fileList: PropTypes.array,
-  data: PropTypes.object,
-  multiple: PropTypes.bool,
-  disabled: PropTypes.bool,
-  disabledFileItem: PropTypes.bool,
-  name: PropTypes.string,
-  timeout: PropTypes.number,
-  withCredentials: PropTypes.bool,
-  headers: PropTypes.object,
-  locale: PropTypes.any,
-  listType: PropTypes.oneOf(['text', 'picture-text', 'picture']),
-  shouldQueueUpdate: PropTypes.func,
-  shouldUpload: PropTypes.func,
-  onChange: PropTypes.func,
-  onUpload: PropTypes.func,
-  onReupload: PropTypes.func,
-  onPreview: PropTypes.func,
-  onError: PropTypes.func,
-  onSuccess: PropTypes.func,
-  onProgress: PropTypes.func,
-  onRemove: PropTypes.func,
-  maxPreviewFileSize: PropTypes.number,
-  style: PropTypes.object,
-  toggleAs: PropTypes.elementType,
-  renderFileInfo: PropTypes.func,
-  removable: PropTypes.bool,
-  fileListVisible: PropTypes.bool,
-  draggable: PropTypes.bool
-};
 
 export default Uploader;

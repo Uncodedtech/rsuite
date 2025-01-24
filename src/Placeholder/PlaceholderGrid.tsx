@@ -1,97 +1,105 @@
-import React from 'react';
-import PropTypes from 'prop-types';
-import classNames from 'classnames';
-import { useClassNames } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
+import React, { useMemo } from 'react';
+import { useClassNames } from '@/internals/hooks';
+import { useCustom } from '../CustomProvider';
+import { forwardRef } from '@/internals/utils';
+import type { WithAsProps } from '@/internals/types';
 
 export interface PlaceholderGridProps extends WithAsProps {
-  /* number of rows */
+  /**
+   * The number of rows.
+   *
+   * @default 5
+   */
   rows?: number;
 
-  /* height of rows */
+  /**
+   * The height of the row.
+   *
+   * @default 10
+   */
   rowHeight?: number;
 
-  /* margin of rows */
+  /**
+   * @deprecated Use `rowSpacing` instead.
+   */
   rowMargin?: number;
 
-  /* number of columns */
+  /**
+   * The spacing between rows.
+   *
+   * @default 20
+   * @version 5.59.1
+   */
+  rowSpacing?: number;
+
+  /**
+   * The number of columns.
+   * @default 5
+   */
   columns?: number;
 
-  /** Placeholder status */
+  /**
+   * Placeholder status, display the loading state.
+   */
   active?: boolean;
 }
 
-const defaultProps: Partial<PlaceholderGridProps> = {
-  as: 'div',
-  classPrefix: 'placeholder',
-  rows: 5,
-  columns: 5,
-  rowHeight: 10,
-  rowMargin: 20
-};
+/**
+ * The `Placeholder.Grid` component is used to display the loading state of the block.
+ * @see https://rsuitejs.com/components/placeholder
+ */
+const PlaceholderGrid = forwardRef<'div', PlaceholderGridProps>((props, ref) => {
+  const { propsWithDefaults } = useCustom('PlaceholderGrid', props);
+  const {
+    as: Component = 'div',
+    className,
+    classPrefix = 'placeholder',
+    rows = 5,
+    columns = 5,
+    rowHeight = 10,
+    rowMargin = 20,
+    rowSpacing = rowMargin,
+    active,
+    ...rest
+  } = propsWithDefaults;
 
-const PlaceholderGrid: RsRefForwardingComponent<'div', PlaceholderGridProps> = React.forwardRef(
-  (props: PlaceholderGridProps, ref) => {
-    const {
-      as: Component,
-      className,
-      classPrefix,
-      rows,
-      columns,
-      rowHeight,
-      rowMargin,
-      active,
-      ...rest
-    } = props;
+  const { merge, prefix, withClassPrefix } = useClassNames(classPrefix);
 
-    const { merge, prefix, withClassPrefix } = useClassNames(classPrefix);
-    const classes = merge(className, withClassPrefix('grid', { active }));
-    const colItems = [];
-    const firstRowItemWidth = Math.random() * 30 + 30;
-    const itemWidth = firstRowItemWidth / 2;
+  const classes = merge(className, withClassPrefix('grid', { active }));
+
+  const items = useMemo(() => {
+    const colItems: React.ReactElement[] = [];
+    const rowClassName = prefix`row`;
+    const columnClassName = prefix`grid-col`;
+
     for (let i = 0; i < columns; i++) {
-      const rowItems = [];
+      const rowItems: React.ReactElement[] = [];
       for (let j = 0; j < rows; j++) {
-        let widthPercent = Math.random() * 50 + 10; // when first column
-        if (i > 0) {
-          // when other columns
-          widthPercent = j > 0 ? itemWidth : firstRowItemWidth;
-        }
         rowItems.push(
-          <p
+          <div
             key={j}
-            style={{
-              width: `${widthPercent}%`,
-              height: rowHeight,
-              marginTop: j > 0 ? rowMargin : null
-            }}
+            style={{ height: rowHeight, marginTop: j > 0 ? rowSpacing : undefined }}
+            className={rowClassName}
           />
         );
       }
       colItems.push(
-        <div key={i} className={classNames(prefix('grid-col'))}>
+        <div key={i} className={columnClassName}>
           {rowItems}
         </div>
       );
     }
-    return (
-      <Component {...rest} ref={ref} className={classes}>
-        {colItems}
-      </Component>
-    );
-  }
-);
+
+    return colItems;
+  }, [columns, prefix, rowHeight, rowSpacing, rows]);
+
+  return (
+    <Component {...rest} ref={ref} className={classes}>
+      {items}
+    </Component>
+  );
+});
 
 PlaceholderGrid.displayName = 'PlaceholderGrid';
-PlaceholderGrid.defaultProps = defaultProps;
-PlaceholderGrid.propTypes = {
-  className: PropTypes.string,
-  classPrefix: PropTypes.string,
-  rows: PropTypes.number,
-  columns: PropTypes.number,
-  rowHeight: PropTypes.number,
-  rowMargin: PropTypes.number,
-  active: PropTypes.bool
-};
 
 export default PlaceholderGrid;

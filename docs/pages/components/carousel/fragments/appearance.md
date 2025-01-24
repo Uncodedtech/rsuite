@@ -1,18 +1,16 @@
 <!--start-code-->
 
 ```js
-const styles = {
-  radioGroupLabel: {
-    padding: '8px 12px',
-    display: 'inline-block',
-    verticalAlign: 'middle'
-  }
-};
+import { Carousel, RadioGroup, Radio, Divider } from 'rsuite';
+
+const RadioLabel = ({ children }) => <label style={{ padding: 7 }}>{children}</label>;
+
 function App() {
   const [placement, setPlacement] = React.useState('bottom');
   const [shape, setShape] = React.useState('dot');
+
   return (
-    <div>
+    <>
       <RadioGroup
         name="radioList"
         inline
@@ -20,7 +18,7 @@ function App() {
         defaultValue={placement}
         onChange={setPlacement}
       >
-        <span style={styles.radioGroupLabel}>Placement: </span>
+        <RadioLabel>Placement: </RadioLabel>
         <Radio value="top">Top</Radio>
         <Radio value="bottom">Bottom</Radio>
         <Radio value="left">Left</Radio>
@@ -34,7 +32,7 @@ function App() {
         defaultValue={shape}
         onChange={setShape}
       >
-        <span style={styles.radioGroupLabel}>Shape: </span>
+        <RadioLabel>Shape: </RadioLabel>
         <Radio value="dot">Dot</Radio>
         <Radio value="bar">Bar</Radio>
       </RadioGroup>
@@ -50,11 +48,11 @@ function App() {
         <img src="https://via.placeholder.com/600x250/8f8e94/FFFFFF?text=4" height="250" />
         <img src="https://via.placeholder.com/600x250/8f8e94/FFFFFF?text=5" height="250" />
       </Carousel>
-    </div>
+    </>
   );
 }
 
-ReactDOM.render(<App />);
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

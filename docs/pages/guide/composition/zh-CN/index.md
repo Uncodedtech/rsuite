@@ -4,7 +4,7 @@ React Suite 一直在组件的灵活性与简易性之间寻找平衡，让组�
 
 ## 组件属性
 
-### as 属性
+### `as` 属性
 
 React Suite 中的所有 UI 组件都提供了一个 `as` 属性，可以更改将被渲染的根元素。
 
@@ -26,7 +26,7 @@ return (
 ```jsx
 return (
   <>
-    <Input tabIndex={1} onFoucs={e => console.log(e)} />
+    <Input tabIndex={1} onFocus={e => console.log(e)} />
   </>
 );
 ```
@@ -35,25 +35,25 @@ return (
 
 React Suite 的导航组件支持 `as` 属性， 用于接收一个第三方路由库的组件类型。 包含的组件: `Dropdown`，`Breadcrumb`，`Nav`。
 
-### next/link
+### `next/link`
 
 ```jsx
 import Link from 'next/link';
 
-const NavLink = React.forwardRef(({ href, as, ...rest }, ref) => (
-  <Link href={href} as={as}>
-    <a ref={ref} {...rest} />
-  </Link>
-));
+<Nav.Item as={Link} href="/about">
+  About
+</Nav.Item>;
 
-return (
-  <Nav.Item as={NavLink} href="/">
-    Home
-  </Nav.Item>
-);
+<Breadcrumb.Item as={Link} href="/about">
+  About
+</Breadcrumb.Item>;
+
+<Dropdown.Item as={Link} href="/about">
+  About
+</Dropdown.Item>;
 ```
 
-### react-router-dom
+### `react-router-dom`
 
 ```jsx
 import { Link } from 'react-router-dom';
@@ -98,6 +98,6 @@ return <Whisper speaker={<CustomPopover />}>open</Whisper>;
 
 ## 常见问题
 
-- [怎么实现一个 Card 组件？](/zh/components/panel#card)
+- [怎么实现一个 Card 组件？](/zh/components/panel#卡片)
 - [怎么自定义一个弹窗?](/zh/components/whisper)
 - [怎么组合 Popover 与 Dropdown ?](/zh/components/dropdown#used-with-popover)

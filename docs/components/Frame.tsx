@@ -1,7 +1,7 @@
 import React from 'react';
 import SideNavbar from './SideNavbar';
 import TopLevelNav from './TopLevelNav';
-import AppContext from './AppContext';
+import { useApp } from './AppContext';
 
 export interface FrameProps {
   submenu?: boolean;
@@ -22,7 +22,7 @@ export default function Frame(props: FrameProps) {
 
   const {
     theme: [, direction]
-  } = React.useContext(AppContext);
+  } = useApp();
 
   const contextStyle = {
     [`margin${direction === 'rtl' ? 'Right' : 'Left'}`]: submenu ? 324 : 80
@@ -31,7 +31,7 @@ export default function Frame(props: FrameProps) {
   return (
     <div className={submenu ? '' : 'submenu-close'}>
       <TopLevelNav showSubmenu={submenu} onToggleMenu={handleToggleMenu} />
-      <SideNavbar style={menuStyles} />
+      <SideNavbar style={menuStyles} showSubmenu={submenu} onToggleMenu={handleToggleMenu} />
       <div className="page-context" style={contextStyle}>
         {props.children}
       </div>

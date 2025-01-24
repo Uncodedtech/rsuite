@@ -1,6 +1,5 @@
 import React, { useState, useRef, useImperativeHandle, useEffect, useMemo } from 'react';
-import PropTypes from 'prop-types';
-import { partitionHTMLProps, isIE, guid } from '../utils';
+import { partitionHTMLProps, isIE, guid } from '@/internals/utils';
 
 const sizerStyle: React.CSSProperties = {
   position: 'absolute',
@@ -53,7 +52,7 @@ const useInputWidth = (
   sizerRef: React.RefObject<HTMLDivElement>,
   placeholderRef: React.RefObject<HTMLDivElement>
 ) => {
-  const { minWidth, placeholder, value, onAutosize } = props;
+  const { minWidth = 1, placeholder, value, onAutosize } = props;
   const [inputWidth, setInputWidth] = useState(minWidth);
 
   useEffect(() => {
@@ -63,9 +62,9 @@ const useInputWidth = (
 
     let width: number;
     if (placeholder && !value && placeholderRef.current) {
-      width = Math.max(sizerRef.current.scrollWidth, placeholderRef.current.scrollWidth) + 2;
+      width = Math.max(sizerRef.current.scrollWidth, placeholderRef.current.scrollWidth) + 10;
     } else {
-      width = sizerRef.current.scrollWidth + 2;
+      width = sizerRef.current.scrollWidth + 10;
     }
 
     if (width < minWidth) {
@@ -96,14 +95,14 @@ const InputAutosize = React.forwardRef(
       tabIndex
     } = props;
 
-    const rootRef = useRef();
-    const inputRef = useRef();
-    const sizerRef = useRef();
-    const placeholderRef = useRef();
+    const rootRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const sizerRef = useRef<HTMLDivElement>(null);
+    const placeholderRef = useRef<HTMLDivElement>(null);
 
     useImperativeHandle(ref, () => ({
-      root: rootRef.current,
-      input: inputRef.current
+      root: rootRef.current as HTMLDivElement,
+      input: inputRef.current as HTMLInputElement
     }));
 
     const sizerValue = [defaultValue, value, ''].reduce((previousValue, currentValue) => {
@@ -127,12 +126,15 @@ const InputAutosize = React.forwardRef(
       }
 
       const input = inputRef.current;
-      const inputStyles: CSSStyleDeclaration = input && window.getComputedStyle(input);
+      const inputStyles: CSSStyleDeclaration | null = input && window.getComputedStyle(input);
       if (!inputStyles) {
         return;
       }
 
-      copyStyles(inputStyles, sizerRef.current);
+      if (sizerRef.current) {
+        copyStyles(inputStyles, sizerRef.current);
+      }
+
       if (placeholderRef.current) {
         copyStyles(inputStyles, placeholderRef.current);
       }
@@ -172,21 +174,5 @@ const InputAutosize = React.forwardRef(
 );
 
 InputAutosize.displayName = 'InputAutosize';
-InputAutosize.propTypes = {
-  className: PropTypes.string,
-  defaultValue: PropTypes.any,
-  inputId: PropTypes.string,
-  inputClassName: PropTypes.string,
-  inputStyle: PropTypes.object,
-  minWidth: PropTypes.number,
-  onChange: PropTypes.func,
-  placeholder: PropTypes.string,
-  style: PropTypes.object,
-  value: PropTypes.any,
-  onAutosize: PropTypes.func
-};
-InputAutosize.defaultProps = {
-  minWidth: 1
-};
 
 export default InputAutosize;

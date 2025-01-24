@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import classnames from 'classnames';
-import { IconProps } from '@rsuite/icons/lib/Icon';
+import { IconProps } from '@rsuite/icons/Icon';
 
 export interface IconItemProps {
   onSelect: (name: string, event: React.MouseEvent) => void;
@@ -12,7 +12,7 @@ export interface IconItemProps {
 const IconItem = (props: IconItemProps) => {
   const { onSelect, icon: IconComponent, name, newIcon, ...rest } = props;
 
-  const handleSelect = React.useCallback(
+  const handleSelect = useCallback(
     event => {
       onSelect?.(name, event);
     },
@@ -25,10 +25,7 @@ const IconItem = (props: IconItemProps) => {
       tabIndex={0}
       onClick={handleSelect}
     >
-      <div className="icon-wrapper">
-        <IconComponent className="icon-svg" {...rest} />
-      </div>
-      <p className="icon-label">{name}</p>
+      <IconComponent className="icon-svg" {...rest} />
     </div>
   );
 };

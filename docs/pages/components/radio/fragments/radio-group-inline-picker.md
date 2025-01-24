@@ -1,35 +1,30 @@
 <!--start-code-->
 
 ```js
-const styles = {
-  radioGroupLabel: {
-    padding: '8px 2px 8px 10px',
-    display: 'inline-block',
-    verticalAlign: 'middle'
-  }
-};
+import { Radio, RadioGroup } from 'rsuite';
 
-const instance = (
-  <Form.Group controlId="radioList">
-    <RadioGroup name="radioList" inline appearance="picker" defaultValue="A">
-      <Radio value="A">Item A</Radio>
-      <Radio value="B">Item B</Radio>
-      <Radio value="C">Item C</Radio>
-      <Radio value="D" disabled>
-        Item D
-      </Radio>
+const RadioLabel = ({ children }) => <label style={{ padding: 7 }}>{children}</label>;
+
+const App = () => (
+  <>
+    <RadioGroup name="radio-group-inline-picker" inline appearance="picker" defaultValue="A">
+      <Radio value="A">Radio A</Radio>
+      <Radio value="B">Radio B</Radio>
+      <Radio value="C">Radio C</Radio>
+      <Radio value="D">Radio D</Radio>
     </RadioGroup>
 
     <hr />
-    <RadioGroup name="radioList" inline appearance="picker" defaultValue="A">
-      <span style={styles.radioGroupLabel}>Status: </span>
-      <Radio value="A">All</Radio>
-      <Radio value="B">Enbaled</Radio>
-      <Radio value="C">Disabled</Radio>
+    <RadioGroup name="radio-group-inline-picker-label" inline appearance="picker" defaultValue="A">
+      <RadioLabel>Label: </RadioLabel>
+      <Radio value="A">Radio A</Radio>
+      <Radio value="B">Radio B</Radio>
+      <Radio value="C">Radio C</Radio>
     </RadioGroup>
-  </Form.Group>
+  </>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

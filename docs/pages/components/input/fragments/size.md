@@ -1,8 +1,11 @@
 <!--start-code-->
 
 ```js
+import { Input, InputGroup, Grid, Row, Col } from 'rsuite';
+import SearchIcon from '@rsuite/icons/Search';
+
 const styles = {
-  marginBottom: 10,
+  marginBottom: 10
 };
 
 const CustomInput = ({ ...props }) => <Input {...props} style={styles} />;
@@ -11,7 +14,7 @@ const CustomInputGroup = ({ placeholder, ...props }) => (
   <InputGroup {...props} style={styles}>
     <Input placeholder={placeholder} />
     <InputGroup.Addon>
-      <Search />
+      <SearchIcon />
     </InputGroup.Addon>
   </InputGroup>
 );
@@ -20,12 +23,12 @@ const CustomInputGroupWidthButton = ({ placeholder, ...props }) => (
   <InputGroup {...props} inside style={styles}>
     <Input placeholder={placeholder} />
     <InputGroup.Button>
-      <Search />
+      <SearchIcon />
     </InputGroup.Button>
   </InputGroup>
 );
 
-const instance = (
+const App = () => (
   <Grid fluid>
     <Row>
       <Col xs={24} sm={12} md={8}>
@@ -49,7 +52,8 @@ const instance = (
     </Row>
   </Grid>
 );
-ReactDOM.render(instance);
+
+ReactDOM.render(<App />, document.getElementById('root'));
 ```
 
 <!--end-code-->

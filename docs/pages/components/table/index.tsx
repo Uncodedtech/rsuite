@@ -11,62 +11,82 @@ import {
   Checkbox,
   Dropdown,
   Pagination,
-  TagPicker
+  TagPicker,
+  Tag,
+  Progress,
+  Loader,
+  Placeholder,
+  HStack,
+  VStack,
+  Input,
+  InputGroup
 } from 'rsuite';
-
+import { faker } from '@faker-js/faker/locale/en';
+import FakeBrowser from '@/components/FakeBrowser';
 import DefaultPage from '@/components/Page';
-import useFetchData from '@/utils/useFetchData';
-import Edit2 from '@rsuite/icons/legacy/Edit2';
-import More from '@rsuite/icons/legacy/More';
-import MehO from '@rsuite/icons/legacy/MehO';
-import FrownO from '@rsuite/icons/legacy/FrownO';
-import SmileO from '@rsuite/icons/legacy/SmileO';
-import Arrows from '@rsuite/icons/legacy/Arrows';
-import MinusSquareO from '@rsuite/icons/legacy/MinusSquareO';
-import PlusSquareO from '@rsuite/icons/legacy/PlusSquareO';
-import Spinner from '@rsuite/icons/legacy/Spinner';
+import ImportGuide from '@/components/ImportGuide';
+import MoreIcon from '@rsuite/icons/legacy/More';
+import CollaspedOutlineIcon from '@rsuite/icons/CollaspedOutline';
+import ExpandOutlineIcon from '@rsuite/icons/ExpandOutline';
+import SpinnerIcon from '@rsuite/icons/legacy/Spinner';
+import {
+  importFakerString,
+  mockTreeData,
+  mockTreeDataToString,
+  mockUsers,
+  mockUsersString,
+  sandboxFakerVersion
+} from '@/utils/mock';
 
-const { HeaderCell, Cell, Column, ColumnGroup } = Table;
+const mockfile = {
+  name: 'mock.js',
+  content: [importFakerString, mockUsersString, mockTreeDataToString].join('\n')
+};
+
+const sandboxDependencies = {
+  ...sandboxFakerVersion
+};
+
+const inDocsComponents = {
+  'import-guide': () => <ImportGuide components={['Table']} />
+};
 
 export default function Page() {
-  const { response: fakeData } = useFetchData('users');
-  const { response: fakeTreeData } = useFetchData('tree-data');
-  const { response: fakeLargeData } = useFetchData('large-data');
-  const { response: fakeDataForColSpan } = useFetchData('users-colspan');
-
   return (
     <DefaultPage
+      inDocsComponents={inDocsComponents}
       dependencies={{
         Nav,
         Checkbox,
         Toggle,
-        fakeData,
-        fakeTreeData,
-        fakeDataForColSpan,
-        fakeLargeData,
         Popover,
         Whisper,
         Divider,
         IconButton,
         Table,
         Button,
-        HeaderCell,
-        Cell,
-        Column,
         Dropdown,
-        ColumnGroup,
-        Edit2,
-        More,
-        MehO,
-        FrownO,
-        SmileO,
-        Arrows,
-        MinusSquareO,
-        PlusSquareO,
-        Spinner,
+        MoreIcon,
+        CollaspedOutlineIcon,
+        ExpandOutlineIcon,
+        SpinnerIcon,
         Pagination,
-        TagPicker
+        TagPicker,
+        Tag,
+        Progress,
+        faker,
+        Loader,
+        Placeholder,
+        Input,
+        InputGroup,
+        HStack,
+        VStack,
+        FakeBrowser,
+        mockTreeData,
+        mockUsers
       }}
+      sandboxDependencies={sandboxDependencies}
+      sandboxFiles={[mockfile]}
     />
   );
 }

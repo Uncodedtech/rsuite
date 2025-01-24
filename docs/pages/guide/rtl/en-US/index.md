@@ -1,4 +1,4 @@
-# Right-to-left
+# Right to left
 
 In order to support the habits of languages ​​such as Arabic and Hebrew, the UI of the language read from right to left (RTL).
 
@@ -6,7 +6,7 @@ In order to support the habits of languages ​​such as Arabic and Hebrew, the
 
 ### 1.HTML
 
-Make sure the `dir` attribute is set on the body:
+Make sure the `dir` attribute is set on the html:
 
 ```html
 <html dir="rtl"></html>
@@ -27,11 +27,11 @@ function RTL(props) {
 - Including the RTL version when using the compiled React Suite CSS
 
 ```less
-@import '~rsuite/dist/styles/rsuite-default-rtl.css'; //or ~rsuite/dist/styles/rsuite-dark-rtl.css
+@import '~rsuite/dist/rsuite-rtl.min.css';
 ```
 
 - Processing the final CSS via [rtlcss](https://rtlcss.com/) in case of using the Less version
 
 ```less
-@import '~rsuite/lib/styles/themes/default/index.less'; // or ~rsuite/lib/styles/themes/dark/index.less
+@import '~rsuite/styles/index.less';
 ```

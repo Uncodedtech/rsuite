@@ -1,50 +1,47 @@
-import React from 'react';
-import PropTypes from 'prop-types';
+import React, { useContext } from 'react';
+import ArrowLeftLineIcon from '@rsuite/icons/ArrowLeftLine';
 import IconButton from '../IconButton';
-import { useClassNames } from '../utils';
-import { WithAsProps, RsRefForwardingComponent } from '../@types/common';
-import AngleLeft from '@rsuite/icons/legacy/AngleLeft';
-import AngleRight from '@rsuite/icons/legacy/AngleRight';
+import { forwardRef } from '@/internals/utils';
+import { SidenavContext } from './Sidenav';
+import { useClassNames } from '@/internals/hooks';
+import type { WithAsProps } from '@/internals/types';
 
 export interface SidenavToggleProps extends WithAsProps {
-  /** Expand then nav */
-  expanded?: boolean;
-
   /** Callback function for menu state switching */
   onToggle?: (expanded: boolean, event: React.MouseEvent) => void;
 }
 
-const defaultProps: Partial<SidenavToggleProps> = {
-  as: 'div',
-  classPrefix: 'sidenav-toggle'
-};
+const SidenavToggle = forwardRef<'div', SidenavToggleProps>((props, ref) => {
+  const sidenav = useContext(SidenavContext);
 
-const SidenavToggle: RsRefForwardingComponent<'div', SidenavToggleProps> = React.forwardRef(
-  (props: SidenavToggleProps, ref) => {
-    const { as: Component, expanded, className, classPrefix, onToggle, ...rest } = props;
-    const { merge, withClassPrefix } = useClassNames(classPrefix);
-    const classes = merge(className, withClassPrefix({ collapsed: !expanded }));
-    const Icon = expanded ? AngleRight : AngleLeft;
-
-    const handleToggle = (event: React.MouseEvent) => {
-      onToggle?.(!expanded, event);
-    };
-
-    return (
-      <Component {...rest} ref={ref} className={classes}>
-        <IconButton appearance="default" icon={<Icon />} onClick={handleToggle} />
-      </Component>
-    );
+  if (!sidenav) {
+    console.error('<Sidenav.Toggle> must be rendered within a <Sidenav>');
+    return null;
   }
-);
 
-SidenavToggle.displayName = 'SidenavToggle';
-SidenavToggle.defaultProps = defaultProps;
-SidenavToggle.propTypes = {
-  classPrefix: PropTypes.string,
-  className: PropTypes.string,
-  expanded: PropTypes.bool,
-  onToggle: PropTypes.func
-};
+  const { className, classPrefix = 'sidenav-toggle', onToggle, ...rest } = props;
+
+  const expanded = sidenav.expanded;
+
+  const { merge, withClassPrefix } = useClassNames(classPrefix);
+  const classes = merge(className, withClassPrefix({ collapsed: !expanded }));
+
+  const handleToggle = (event: React.MouseEvent) => {
+    onToggle?.(!expanded, event);
+  };
+
+  return (
+    <IconButton
+      {...rest}
+      ref={ref}
+      className={classes}
+      icon={<ArrowLeftLineIcon aria-label="" />}
+      onClick={handleToggle}
+      aria-label={expanded ? 'Collapse' : 'Expand'}
+    />
+  );
+});
+
+SidenavToggle.displayName = 'Sidenav.Toggle';
 
 export default SidenavToggle;
